@@ -145,17 +145,19 @@ LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'file': {
-            'level': 'WARNING',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs' / 'django.log',
+        'console': {
+            'class': 'logging.StreamHandler',
         },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'WARNING',
-            'propagate': True,
+            'handlers': ['console'],
+            'level': os.getenv('DJANGO_LOG_LEVEL', 'WARNING'),
+            'propagate': False,
         },
     },
 }
