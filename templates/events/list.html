@@ -1,0 +1,248 @@
+{% extends 'base.html' %}
+{% load event_filters %}
+
+{% block title %}Events - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Events & Awards</h1>
+    <p>Quarterly event support applications</p>
+</section>
+
+{% if winner_history %}
+<section class="content-section">
+    <div class="alert alert-success">
+        <strong>Congratulations!</strong> You have won event support for: 
+        {% for win in winner_history %}
+            {{ win.event.name }} ({{ win.event.month|month_name }} {{ win.event.year }}){% if not forloop.last %}, {% endif %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="content-section">
+    <h2>Upcoming Events</h2>
+    
+    {% if events %}
+        <div class="events-grid">
+            {% for item in events %}
+                <div class="event-card {% if item.event.is_completed %}completed{% endif %} {% if item.has_won_before %}disabled{% endif %}">
+                    <div class="event-header">
+                        <div class="event-month">{{ item.month_name }}</div>
+                        <div class="event-year">{{ item.event.year }}</div>
+                    </div>
+                    
+                    <div class="event-body">
+                        <h3>{{ item.event.name }}</h3>
+                        <p class="event-date">{{ item.event.date|date:"F d, Y" }}</p>
+                        <p class="event-venue">{{ item.event.venue }}</p>
+                        <p class="event-desc">{{ item.event.description|truncatewords:15 }}</p>
+                        
+                        {% if item.application %}
+                            <div class="application-status">
+                                <span class="badge badge-{{ item.application.status }}">
+                                    Application {{ item.application.get_status_display }}
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="event-footer">
+                        {% if item.event.is_completed %}
+                            {% if item.event.winner == user %}
+                                <span class="winner-badge">You Won!</span>
+                            {% else %}
+                                <span class="closed-badge">Awarded to {{ item.event.winner.get_full_name }}</span>
+                            {% endif %}
+                        {% elif item.has_won_before %}
+                            <span class="ineligible-badge">Ineligible (Previous Winner)</span>
+                        {% elif item.application %}
+                            <a href="{% url 'application_status' item.application.id %}" class="btn btn-secondary btn-sm">
+                                View Application
+                            </a>
+                        {% elif item.can_apply %}
+                            <a href="{% url 'apply_event' item.event.id %}" class="btn btn-primary btn-block">
+                                Apply Now
+                            </a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No events scheduled.</p>
+    {% endif %}
+</section>
+
+<section class="content-section">
+    <div class="info-box">
+        <h4>How Event Support Works</h4>
+        <ul>
+            <li>Events are held in April, August, and December</li>
+            <li>One member receives full event support per quarter</li>
+            <li>Previous winners must wait for all members to win before reapplying</li>
+            <li>Admin approves applications based on merit and rotation</li>
+        </ul>
+    </div>
+</section>
+
+<style>
+    .events-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .event-card {
+        background: var(--white);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+        transition: var(--transition);
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .event-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    .event-card.completed {
+        opacity: 0.8;
+        background: #f8f9fa;
+    }
+    
+    .event-card.disabled {
+        background: #f8f9fa;
+        border-color: #dee2e6;
+    }
+    
+    .event-header {
+        background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+        color: var(--white);
+        padding: 1rem;
+        text-align: center;
+    }
+    
+    .event-month {
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .event-year {
+        font-size: 1rem;
+        opacity: 0.9;
+    }
+    
+    .event-body {
+        padding: 1.5rem;
+        flex: 1;
+    }
+    
+    .event-body h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.25rem;
+        color: var(--dark-text);
+    }
+    
+    .event-date, .event-venue {
+        font-size: 0.9rem;
+        color: var(--medium-text);
+        margin: 0.25rem 0;
+    }
+    
+    .event-desc {
+        margin: 0.75rem 0;
+        font-size: 0.95rem;
+        color: var(--dark-text);
+        line-height: 1.5;
+    }
+    
+    .application-status {
+        margin-top: 1rem;
+        text-align: center;
+    }
+    
+    .event-footer {
+        padding: 1rem 1.5rem;
+        border-top: 1px solid var(--border-color);
+        text-align: center;
+    }
+    
+    .winner-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #d1fae5;
+        color: #065f46;
+        border-radius: var(--radius);
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .closed-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #f3f4f6;
+        color: #374151;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+    }
+    
+    .ineligible-badge {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: #fef3c7;
+        color: #92400e;
+        border-radius: var(--radius);
+        font-size: 0.9rem;
+    }
+    
+    .btn-block {
+        display: block;
+        width: 100%;
+    }
+    
+    .info-box {
+        background: var(--light-bg);
+        padding: 1.5rem;
+        border-radius: var(--radius);
+        border-left: 4px solid var(--primary-color);
+    }
+    
+    .info-box h4 {
+        margin: 0 0 1rem 0;
+        color: var(--dark-text);
+        font-size: 1.1rem;
+    }
+    
+    .info-box ul {
+        margin: 0;
+        padding-left: 1.5rem;
+        color: var(--medium-text);
+    }
+    
+    .info-box li {
+        margin: 0.5rem 0;
+    }
+    
+    .badge-pending {
+        background: #fef3c7;
+        color: #92400e;
+    }
+    
+    .badge-approved {
+        background: #d1fae5;
+        color: #065f46;
+    }
+    
+    .badge-rejected {
+        background: #fee2e2;
+        color: #991b1b;
+    }
+</style>
+{% endblock %}

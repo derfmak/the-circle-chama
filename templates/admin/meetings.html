@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Meetings - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Manage Meetings</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_create_meeting' %}" class="btn btn-primary">Create Meeting</a>
+        <a href="{% url 'admin_attendance_report' %}" class="btn btn-secondary">Attendance Report</a>
+    </div>
+</section>
+
+<section class="content-section">
+    {% if meetings %}
+        <div class="meetings-admin-list">
+            {% for meeting in meetings %}
+                <div class="meeting-admin-card {% if meeting.status == 'completed' %}completed{% endif %} {% if meeting.status == 'scheduled' and meeting.date < now %}overdue{% endif %}">
+                    <div class="meeting-date-block">
+                        <span class="day">{{ meeting.date|date:"d" }}</span>
+                        <span class="month">{{ meeting.date|date:"M" }}</span>
+                    </div>
+                    
+                    <div class="meeting-info-block">
+                        <h3>{{ meeting.title }}</h3>
+                        <p class="meeting-meta">{{ meeting.date|date:"l, F d, Y at H:i" }} | {{ meeting.venue }}</p>
+                        <p class="meeting-purpose">{{ meeting.purpose|truncatewords:10 }}</p>
+                        
+                        <div class="meeting-stats">
+                            <span class="stat">
+                                <strong>{{ meeting.attendances.filter.status__accepted.count }}</strong> Accepted
+                            </span>
+                            <span class="stat">
+                                <strong>{{ meeting.attendances.filter.status__absent.count }}</strong> Absent
+                            </span>
+                            <span class="stat">
+                                <strong>{{ meeting.attendances.filter.payment_status__paid.count }}</strong> Paid
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="meeting-status-block">
+                        <span class="badge badge-{{ meeting.status }}">{{ meeting.get_status_display }}</span>
+                    </div>
+                    
+                    <div class="meeting-actions-block">
+                        <a href="{% url 'admin_meeting_detail' meeting.id %}" class="btn btn-sm btn-secondary">View</a>
+                        <a href="{% url 'admin_edit_meeting' meeting.id %}" class="btn btn-sm btn-secondary">Edit</a>
+                        {% if meeting.status == 'scheduled' and meeting.date < now %}
+                            <a href="{% url 'admin_add_summary' meeting.id %}" class="btn btn-sm btn-primary">Add Summary</a>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">Previous</a>
+                {% endif %}
+                <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No meetings found.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,86 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Meeting - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Edit Meeting</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_meetings' %}" class="btn btn-secondary">Back to Meetings</a>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="form-container" style="max-width: 800px; margin: 0 auto;">
+        <form method="post" class="styled-form" novalidate>
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="{{ form.title.id_for_label }}">Meeting Title *</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <span class="error-message">{{ form.title.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.date.id_for_label }}">Date & Time *</label>
+                    {{ form.date }}
+                    {% if form.date.errors %}
+                        <span class="error-message">{{ form.date.errors.0 }}</span>
+                    {% endif %}
+                    <span class="form-hint">Must be current date or future</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.venue.id_for_label }}">Venue *</label>
+                    {{ form.venue }}
+                    {% if form.venue.errors %}
+                        <span class="error-message">{{ form.venue.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.purpose.id_for_label }}">Purpose *</label>
+                {{ form.purpose }}
+                {% if form.purpose.errors %}
+                    <span class="error-message">{{ form.purpose.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.facilitation_fee.id_for_label }}">Facilitation Fee (KES)</label>
+                    {{ form.facilitation_fee }}
+                    {% if form.facilitation_fee.errors %}
+                        <span class="error-message">{{ form.facilitation_fee.errors.0 }}</span>
+                    {% endif %}
+                    <span class="form-hint">Minimum 500, increments of 50</span>
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.mpesa_number.id_for_label }}">M-Pesa Number for Collections</label>
+                    {{ form.mpesa_number }}
+                    {% if form.mpesa_number.errors %}
+                        <span class="error-message">{{ form.mpesa_number.errors.0 }}</span>
+                    {% endif %}
+                    <span class="form-hint">Format: 254712345678 (starts with 2541 or 2547)</span>
+                </div>
+            </div>
+            
+            <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary btn-lg">Update Meeting</button>
+                <a href="{% url 'admin_meeting_detail' meeting.id %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

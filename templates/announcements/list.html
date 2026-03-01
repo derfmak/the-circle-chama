@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block title %}Announcements - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Announcements</h1>
+    <p>Latest updates from THE CIRCLE</p>
+    {% if unread_count > 0 %}
+        <span class="unread-badge">{{ unread_count }} unread</span>
+    {% endif %}
+</section>
+
+<section class="content-section">
+    {% if announcements %}
+        <div class="announcements-list">
+            {% for item in announcements %}
+                <div class="announcement-card {% if not item.is_read %}unread{% endif %} {% if item.announcement.is_edited %}edited{% endif %}">
+                    {% if not item.is_read %}
+                        <div class="unread-indicator"></div>
+                    {% endif %}
+                    
+                    <div class="announcement-header">
+                        <h3>
+                            <a href="{% url 'announcement_detail' item.announcement.id %}">
+                                {{ item.announcement.title }}
+                            </a>
+                            {% if item.announcement.is_edited %}
+                                <span class="edited-tag">Edited</span>
+                            {% endif %}
+                        </h3>
+                        <span class="announcement-date">{{ item.announcement.created_at|date:"F d, Y" }}</span>
+                    </div>
+                    
+                    <div class="announcement-preview">
+                        {{ item.announcement.content|truncatewords:30 }}
+                    </div>
+                    
+                    <div class="announcement-footer">
+                        <a href="{% url 'announcement_detail' item.announcement.id %}" class="btn btn-sm btn-secondary">
+                            Read More
+                        </a>
+                        {% if not item.is_read %}
+                            <span class="new-tag">New</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">Previous</a>
+                {% endif %}
+                
+                <span class="page-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No announcements at this time.</p>
+    {% endif %}
+</section>
+{% endblock %}

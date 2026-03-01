@@ -1,0 +1,409 @@
+{% extends 'base.html' %}
+
+{% block title %}Quarterly Contributions - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Quarterly Contributions</h1>
+    <p>Track and manage your quarterly payments</p>
+</section>
+
+<section class="filter-section">
+    <div class="year-selector">
+        <label for="yearSelect">Select Year:</label>
+        <select id="yearSelect" class="form-control" onchange="changeYear(this.value)">
+            {% for year in years %}
+                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+            {% endfor %}
+        </select>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="quarters-grid">
+        {% for quarter in quarters %}
+            <div class="quarter-card 
+                {% if quarter.status == 'paid' %}paid{% endif %} 
+                {% if quarter.status == 'partial' %}partial{% endif %} 
+                {% if quarter.status == 'waiting_approval' %}waiting{% endif %}
+                {% if quarter.status == 'rejected' %}rejected{% endif %}">
+                <div class="quarter-header">
+                    <h3>Quarter {{ quarter.quarter }} - {{ selected_year }}</h3>
+                    <span class="quarter-months">{{ quarter.months|join:" - " }}</span>
+                </div>
+                
+                <div class="quarter-body">
+                    <div class="amount-breakdown">
+                        <div class="amount-row">
+                            <span class="amount-label">Amount Due:</span>
+                            <span class="amount-value">KES {{ quarter.amount_due|floatformat:2 }}</span>
+                        </div>
+                        <div class="amount-row">
+                            <span class="amount-label">Amount Paid:</span>
+                            <span class="amount-value paid-amount">KES {{ quarter.amount_paid|floatformat:2 }}</span>
+                        </div>
+                        <div class="amount-row">
+                            <span class="amount-label">Balance:</span>
+                            <span class="amount-value balance-amount">KES {{ quarter.balance|floatformat:2 }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="progress-section">
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: {{ quarter.progress }}%;">
+                                {{ quarter.progress|floatformat:0 }}%
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="quarter-status">
+                        {% if quarter.status == 'paid' %}
+                            <span class="status-badge status-paid">Fully Paid ✓</span>
+                        {% elif quarter.status == 'partial' %}
+                            <span class="status-badge status-partial">Partially Paid</span>
+                        {% elif quarter.status == 'waiting_approval' %}
+                            <span class="status-badge status-waiting">Waiting Approval</span>
+                        {% elif quarter.status == 'pending' %}
+                            <span class="status-badge status-pending">Pending</span>
+                        {% elif quarter.status == 'rejected' %}
+                            <span class="status-badge status-rejected">Rejected</span>
+                        {% endif %}
+                    </div>
+                    
+                    {% if quarter.paid_at %}
+                        <div class="quarter-paid-date">
+                            <small>Last payment: {{ quarter.paid_at|date:"M d, Y" }}</small>
+                        </div>
+                    {% endif %}
+                    
+                    {% if quarter.has_pending_request %}
+                        <div class="pending-request-badge">
+                            Cash request pending approval
+                        </div>
+                    {% endif %}
+                    
+                    {% if quarter.has_rejected_request %}
+                        <div class="rejected-request-badge">
+                            <small>Admin note: Your cash request was declined</small>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <div class="quarter-footer">
+                    {% if quarter.status == 'pending' or quarter.status == 'partial' %}
+                        <a href="{% url 'pay_quarterly' quarter.quarter %}?year={{ selected_year }}" class="btn btn-primary btn-block">
+                            Make Payment
+                        </a>
+                    {% elif quarter.status == 'paid' %}
+                        <span class="paid-check">✓ Paid in Full</span>
+                    {% elif quarter.status == 'waiting_approval' %}
+                        <span class="waiting-text">Awaiting Admin Approval</span>
+                    {% elif quarter.status == 'rejected' %}
+                        <a href="{% url 'pay_quarterly' quarter.quarter %}?year={{ selected_year }}" class="btn btn-rejected btn-block">
+                            Pay Again
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        {% empty %}
+            <div class="empty-state">
+                <p>No quarterly contributions found for {{ selected_year }}.</p>
+            </div>
+        {% endfor %}
+    </div>
+</section>
+
+<style>
+.filter-section {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e5e7eb;
+}
+
+.year-selector {
+    max-width: 200px;
+}
+
+.year-selector label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+}
+
+.quarters-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.quarter-card {
+    background: white;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    border: 1px solid #e5e7eb;
+    transition: all 0.2s;
+}
+
+.quarter-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.quarter-card.paid {
+    border-left: 4px solid #10b981;
+    background: #f0fdf4;
+}
+
+.quarter-card.partial {
+    border-left: 4px solid #f59e0b;
+    background: #fffbeb;
+}
+
+.quarter-card.waiting {
+    border-left: 4px solid #6b7280;
+    background: #f9fafb;
+    border-style: dashed;
+}
+
+.quarter-card.rejected {
+    border-left: 4px solid #ef4444;
+    background: #fef2f2;
+}
+
+.quarter-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.quarter-header h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 0.25rem;
+}
+
+.quarter-months {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.amount-breakdown {
+    background: #f9fafb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.quarter-card.rejected .amount-breakdown {
+    background: #fee2e2;
+}
+
+.amount-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.amount-row:last-child {
+    border-bottom: none;
+}
+
+.amount-label {
+    font-weight: 500;
+    color: #4b5563;
+}
+
+.amount-value {
+    font-weight: 600;
+    color: #2563eb;
+}
+
+.paid-amount {
+    color: #10b981;
+}
+
+.balance-amount {
+    color: #f59e0b;
+}
+
+.progress-section {
+    margin: 1rem 0;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 24px;
+    background: #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #2563eb;
+    color: white;
+    font-size: 0.75rem;
+    text-align: center;
+    line-height: 24px;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+.quarter-card.rejected .progress-bar {
+    background: #ef4444;
+}
+
+.quarter-status {
+    margin: 1rem 0;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-paid {
+    background: #10b981;
+    color: white;
+}
+
+.status-partial {
+    background: #f59e0b;
+    color: white;
+}
+
+.status-pending {
+    background: #6b7280;
+    color: white;
+}
+
+.status-waiting {
+    background: #6b7280;
+    color: white;
+    border: 1px dashed #f59e0b;
+}
+
+.status-rejected {
+    background: #ef4444;
+    color: white;
+}
+
+.quarter-paid-date {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 0.5rem;
+}
+
+.pending-request-badge {
+    background: #fef3c7;
+    color: #92400e;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    text-align: center;
+}
+
+.rejected-request-badge {
+    background: #fee2e2;
+    color: #b91c1c;
+    padding: 0.5rem;
+    border-radius: 0.375rem;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    text-align: center;
+    border: 1px solid #ef4444;
+}
+
+.quarter-footer {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-rejected {
+    background: #ef4444;
+    color: white;
+}
+
+.btn-rejected:hover {
+    background: #dc2626;
+}
+
+.btn-block {
+    display: block;
+    width: 100%;
+}
+
+.paid-check {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.waiting-text {
+    color: #6b7280;
+    font-style: italic;
+}
+
+.empty-state {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+    color: #6b7280;
+}
+
+@media (max-width: 768px) {
+    .quarters-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function changeYear(year) {
+    window.location.href = `?year=${year}`;
+}
+</script>
+{% endblock %}

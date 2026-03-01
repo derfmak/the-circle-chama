@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Member - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Add New Member</h1>
+    <a href="{% url 'admin_members_list' %}" class="btn btn-secondary">Back to Members</a>
+</section>
+
+<section class="content-section">
+    {% if errors %}
+        <div class="alert alert-error">
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+    
+    <form method="post" class="admin-form">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h3>Personal Information</h3>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="first_name">First Name *</label>
+                    <input type="text" id="first_name" name="first_name" class="form-control" 
+                           value="{{ data.first_name|default:'' }}" required minlength="2">
+                </div>
+                
+                <div class="form-group">
+                    <label for="last_name">Last Name *</label>
+                    <input type="text" id="last_name" name="last_name" class="form-control" 
+                           value="{{ data.last_name|default:'' }}" required minlength="2">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email Address *</label>
+                <input type="email" id="email" name="email" class="form-control" 
+                       value="{{ data.email|default:'' }}" required>
+                <small class="form-hint">This will be the username for login. A temporary password will be sent to this email.</small>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="phone_number">Phone Number *</label>
+                    <input type="text" id="phone_number" name="phone_number" class="form-control" 
+                           value="{{ data.phone_number|default:'' }}" required>
+                    <small class="form-hint">Format: 2547XXXXXXXX, 01XXXXXXXX, or 07XXXXXXXX</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="id_number">ID Number *</label>
+                    <input type="text" id="id_number" name="id_number" class="form-control" 
+                           value="{{ data.id_number|default:'' }}" required maxlength="8" minlength="8">
+                    <small class="form-hint">Must be exactly 8 digits</small>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="date_joined">Date Joined</label>
+                <input type="date" id="date_joined" name="date_joined" class="form-control" 
+                       value="{{ data.date_joined|default:'' }}" max="{{ now|date:'Y-m-d' }}">
+                <small class="form-hint">Leave blank for today. Cannot be a future date.</small>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">Create Member & Send Credentials</button>
+            <a href="{% url 'admin_members_list' %}" class="btn btn-link">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

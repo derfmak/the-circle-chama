@@ -1,0 +1,339 @@
+{% extends 'base.html' %}
+
+{% block title %}My Contributions - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>My Contributions</h1>
+    <p>Track all your payments and pending dues</p>
+</section>
+
+<section class="summary-bar">
+    <div class="summary-item">
+        <span class="summary-label">Total Accumulated:</span>
+        <span class="summary-value">KES {{ total_accumulated|default:"0.00" }}</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Total Fines Paid:</span>
+        <span class="summary-value text-danger">KES {{ total_fines|default:"0.00" }}</span>
+    </div>
+    <div class="summary-item">
+        <span class="summary-label">Pending Approval:</span>
+        <span class="summary-value text-warning">KES {{ pending_approval_total|default:"0.00" }}</span>
+    </div>
+    <a href="{% url 'make_payment' %}" class="btn btn-primary">Make Payment</a>
+</section>
+
+<section class="filter-section">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            {{ form.year }}
+        </div>
+        <div class="filter-group">
+            {{ form.status }}
+        </div>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{% url 'contributions' %}" class="btn btn-link">Clear</a>
+    </form>
+</section>
+
+<section class="content-section">
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Year</th>
+                    <th>Month/Quarter</th>
+                    <th>Type</th>
+                    <th>Amount Due</th>
+                    <th>Fine</th>
+                    <th>Amount Paid</th>
+                    <th>Status</th>
+                    <th>Paid Date</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in contributions %}
+                    <tr class="
+                        {% if item.is_late and item.type == 'monthly' %}late{% endif %}
+                        {% if item.status == 'waiting_approval' %}waiting-row{% endif %}
+                        {% if item.status == 'rejected' %}rejected-row{% endif %}
+                    ">
+                        <td>{{ item.year }}</td>
+                        <td>
+                            {% if item.type == 'monthly' and item.month %}
+                                {{ item.month_name }}
+                            {% elif item.type == 'quarterly' and item.quarter %}
+                                Quarter {{ item.quarter }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>{{ item.type_name }}</td>
+                        <td>KES {{ item.amount_due|floatformat:2 }}</td>
+                        <td>
+                            {% if item.fine_amount > 0 %}
+                                <span class="text-danger">KES {{ item.fine_amount|floatformat:2 }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>KES {{ item.amount_paid|floatformat:2 }}</td>
+                        <td>
+                            {% if item.status == 'paid' %}
+                                <span class="badge badge-paid">Paid</span>
+                            {% elif item.status == 'paid_late' %}
+                                <span class="badge badge-paid_late">Paid Late</span>
+                            {% elif item.status == 'waiting_approval' %}
+                                <span class="badge badge-waiting">Waiting</span>
+                            {% elif item.status == 'rejected' %}
+                                <span class="badge badge-rejected">Rejected</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.paid_at %}
+                                {{ item.paid_at|date:"M d, Y" }}
+                            {% elif item.status == 'waiting_approval' %}
+                                <span class="waiting-text">Awaiting admin</span>
+                            {% elif item.status == 'rejected' %}
+                                <span class="rejected-text">Payment rejected</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="8" class="empty-cell">No contributions found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="quick-links">
+    <a href="{% url 'quarterly_contributions' %}" class="btn btn-secondary">View Quarterly Payments</a>
+    <a href="{% url 'make_payment' %}" class="btn btn-primary">Make New Payment</a>
+</section>
+
+<style>
+.summary-bar {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: var(--light-bg);
+    border-radius: var(--radius);
+}
+
+.summary-label {
+    font-weight: 500;
+    color: var(--medium-text);
+}
+
+.summary-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: var(--dark-text);
+}
+
+.summary-value.text-danger {
+    color: var(--danger-color);
+}
+
+.summary-value.text-warning {
+    color: #f59e0b;
+}
+
+.filter-section {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.data-table th {
+    text-align: left;
+    padding: 0.75rem 1rem;
+    background: var(--light-bg);
+    font-weight: 600;
+    color: var(--medium-text);
+    border-bottom: 2px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+.data-table td {
+    padding: 0.75rem 1rem;
+    vertical-align: middle;
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.85rem;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.late {
+    background: rgba(239, 68, 68, 0.03);
+}
+
+.waiting-row {
+    background: rgba(245, 158, 11, 0.03);
+}
+
+.waiting-row:hover {
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.rejected-row {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.rejected-row:hover {
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    line-height: 1.2;
+}
+
+.badge-paid {
+    background: #10b981;
+    color: white;
+}
+
+.badge-paid_late {
+    background: #f59e0b;
+    color: white;
+}
+
+.badge-waiting {
+    background: #f59e0b;
+    color: white;
+    border: 1px dashed white;
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+}
+
+.badge-rejected {
+    background: #ef4444;
+    color: white;
+}
+
+.text-danger {
+    color: var(--danger-color);
+    font-weight: 500;
+    font-size: 0.85rem;
+}
+
+.waiting-text {
+    color: #f59e0b;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+.rejected-text {
+    color: #ef4444;
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+.empty-cell {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--light-text);
+    font-style: italic;
+}
+
+.quick-links {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+    padding: 1rem;
+}
+
+@media (max-width: 768px) {
+    .summary-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .summary-item {
+        justify-content: space-between;
+    }
+    
+    .filter-form {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .data-table {
+        font-size: 0.75rem;
+    }
+    
+    .data-table th,
+    .data-table td {
+        padding: 0.5rem 0.4rem;
+    }
+    
+    .badge {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.35rem;
+    }
+    
+    .quick-links {
+        flex-direction: column;
+    }
+    
+    .quick-links .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

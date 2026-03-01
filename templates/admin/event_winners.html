@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Event Winners - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Event Winners</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_events' %}" class="btn btn-secondary">Back to Events</a>
+    </div>
+</section>
+
+{% if winners %}
+    <div class="dashboard-card">
+        <div class="table-responsive">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Event</th>
+                        <th>Event Date</th>
+                        <th>Won Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for winner in winners %}
+                    <tr>
+                        <td>
+                            <strong>{{ winner.member.get_full_name }}</strong><br>
+                            <small>{{ winner.member.email }}</small>
+                        </td>
+                        <td>{{ winner.event.name }}</td>
+                        <td>{{ winner.event.event_date|date:"F Y" }}</td>
+                        <td>{{ winner.won_at|date:"M d, Y" }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% else %}
+    <div class="alert alert-info">
+        No winners have been selected yet.
+    </div>
+{% endif %}
+{% endblock %}

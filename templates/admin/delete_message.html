@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Message - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Delete Message</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_message_detail' contact.id %}" class="btn btn-secondary">Back to Message</a>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="form-container" style="max-width: 600px; margin: 0 auto;">
+        <div class="alert alert-warning">
+            <strong>Warning:</strong> This action cannot be undone.
+        </div>
+        
+        <div class="message-preview" style="background: var(--light-bg); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 2rem;">
+            <p><strong>From:</strong> {{ contact.name }} ({{ contact.email }})</p>
+            <p><strong>Received:</strong> {{ contact.created_at|date:"F d, Y H:i" }}</p>
+            <p><strong>Message:</strong> {{ contact.message|truncatechars:100 }}</p>
+        </div>
+        
+        <p style="margin-bottom: 2rem;">Are you sure you want to permanently delete this message?</p>
+        
+        <form method="post" style="display: flex; gap: 1rem;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Yes, Delete Message</button>
+            <a href="{% url 'admin_message_detail' contact.id %}" class="btn btn-secondary">Cancel</a>
+        </form>
+    </div>
+</section>
+{% endblock %}

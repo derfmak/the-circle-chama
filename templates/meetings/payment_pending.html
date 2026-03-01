@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Processing Payment - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="payment-status-page">
+    <div class="status-container">
+        <div class="status-icon pending">
+            <div class="spinner"></div>
+        </div>
+        
+        <h1>Processing Facilitation Fee</h1>
+        <p class="status-message">Please check your phone and enter M-Pesa PIN to complete the transaction.</p>
+        
+        <div class="transaction-details">
+            <div class="detail">
+                <span class="label">Meeting:</span>
+                <span class="value">{{ meeting.title }}</span>
+            </div>
+            <div class="detail">
+                <span class="label">Amount:</span>
+                <span class="value">KES {{ payment.amount }}</span>
+            </div>
+            <div class="detail">
+                <span class="label">Phone:</span>
+                <span class="value">{{ payment.mpesa_phone }}</span>
+            </div>
+        </div>
+        
+        <div class="status-timer">
+            <p>Checking status in <span id="countdown">30</span> seconds...</p>
+        </div>
+        
+        <div class="status-actions">
+            <a href="{% url 'check_facilitation_status' payment.id %}" class="btn btn-secondary" id="checkStatus">
+                Check Status Now
+            </a>
+            <a href="{% url 'meetings_list' %}" class="btn btn-link">
+                Back to Meetings
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let countdown = 30;
+const countdownEl = document.getElementById('countdown');
+const checkBtn = document.getElementById('checkStatus');
+
+function updateCountdown() {
+    countdown--;
+    countdownEl.textContent = countdown;
+    
+    if (countdown <= 0) {
+        checkStatus();
+    }
+}
+
+function checkStatus() {
+    fetch('{% url "check_facilitation_status" payment.id %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'completed') {
+                window.location.href = '{% url "facilitation_payment_success" payment.id %}';
+            } else if (data.status === 'failed') {
+                window.location.href = '{% url "facilitation_payment_failed" payment.id %}';
+            } else {
+                countdown = 30;
+            }
+        });
+}
+
+setInterval(updateCountdown, 1000);
+
+checkBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    checkStatus();
+});
+</script>
+{% endblock %}

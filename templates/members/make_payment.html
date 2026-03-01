@@ -1,0 +1,1250 @@
+{% extends 'base.html' %}
+
+{% block title %}Make Payment - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Make Payment</h1>
+    <p>Select months and payment method</p>
+</section>
+
+<section class="content-section">
+    {% if calendar_months or quarterly_contributions %}
+        <form method="post" class="payment-form" id="paymentForm">
+            {% csrf_token %}
+            
+            <div class="payment-tabs">
+                <button type="button" class="tab-btn active" onclick="showTab('monthly')">Monthly</button>
+                <button type="button" class="tab-btn" onclick="showTab('quarterly')">Quarterly</button>
+            </div>
+            
+            <div id="monthlyTab" class="tab-content active">
+                <div class="payment-section">
+                    <div class="year-selector">
+                        <label for="yearSelect">Select Year:</label>
+                        <select id="yearSelect" class="form-control" onchange="changeYear(this.value)">
+                            {% for year in available_years %}
+                                <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <h3>Select Months to Pay - <span id="selectedYearDisplay">{{ selected_year }}</span></h3>
+                    
+                    <div class="calendar-grid" id="calendarGrid">
+                        {% for month_data in calendar_months %}
+                            {% if month_data.year == selected_year %}
+                                <label class="month-card 
+                                    {% if month_data.status == 'rejected' %}rejected-month{% endif %}
+                                    {{ month_data.status_color }} 
+                                    {% if month_data.selectable %}selectable{% endif %} 
+                                    {% if not month_data.selectable and month_data.status != 'rejected' %}disabled{% endif %}" 
+                                       data-month-id="{{ month_data.id }}">
+                                    <input type="checkbox" name="months" value="{{ month_data.id }}" 
+                                           data-amount="{{ month_data.amount }}"
+                                           data-fine="{{ month_data.fine }}"
+                                           data-month="{{ month_data.month }}"
+                                           data-year="{{ month_data.year }}"
+                                           data-name="{{ month_data.month_name }}"
+                                           data-status="{{ month_data.status }}"
+                                           data-type="monthly"
+                                           {% if not month_data.selectable and month_data.status != 'rejected' %}disabled{% endif %}>
+                                    <div class="month-content">
+                                        <span class="month-name">{{ month_data.month_name }}</span>
+                                        <span class="month-amount">KES {{ month_data.amount|floatformat:2 }}</span>
+                                        {% if month_data.fine > 0 and month_data.selectable %}
+                                            <span class="late-badge">+ KES {{ month_data.fine|floatformat:2 }} fine</span>
+                                        {% endif %}
+                                        <div class="month-status">
+                                            {% if month_data.status == 'paid' %}
+                                                <span class="paid-badge">Paid ✓</span>
+                                            {% elif month_data.status == 'paid_late' %}
+                                                <span class="paid-badge">Paid Late</span>
+                                            {% elif month_data.status == 'waiting_approval' %}
+                                                <span class="waiting-badge">Waiting Approval</span>
+                                            {% elif month_data.status == 'rejected' %}
+                                                <span class="rejected-badge">Payment Rejected</span>
+                                                {% if month_data.has_rejected_request %}
+                                                    <div class="rejected-message">
+                                                        <small>Admin note: Your cash request was declined</small>
+                                                    </div>
+                                                {% endif %}
+                                                <a href="{% url 'request_again' month_data.id %}" class="request-again-btn">
+                                                    Request Again
+                                                </a>
+                                            {% elif not month_data.selectable and month_data.status != 'paid' and month_data.status != 'paid_late' %}
+                                                <span class="status-badge">{{ month_data.get_status_display }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div id="quarterlyTab" class="tab-content">
+                <div class="payment-section">
+                    <div class="year-selector">
+                        <label for="quarterYearSelect">Select Year:</label>
+                        <select id="quarterYearSelect" class="form-control" onchange="changeQuarterYear(this.value)">
+                            {% for year in quarter_years %}
+                                <option value="{{ year }}" {% if year == selected_quarter_year %}selected{% endif %}>{{ year }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <h3>Quarterly Contributions - <span id="selectedQuarterYearDisplay">{{ selected_quarter_year }}</span></h3>
+                    
+                    <div class="quarterly-grid" id="quarterlyGrid">
+                        {% for quarter in quarterly_contributions %}
+                            {% if quarter.year == selected_quarter_year %}
+                                <label class="quarter-card 
+                                    {% if quarter.status == 'rejected' %}rejected{% endif %}
+                                    {% if quarter.can_pay %}selectable{% endif %} 
+                                    {% if not quarter.can_pay and quarter.status != 'rejected' %}disabled{% endif %}">
+                                    <input type="checkbox" name="quarterly" value="{{ quarter.id }}" 
+                                           data-due="{{ quarter.amount_due }}"
+                                           data-paid="{{ quarter.amount_paid }}"
+                                           data-balance="{{ quarter.balance }}"
+                                           data-quarter="{{ quarter.quarter }}"
+                                           data-year="{{ quarter.year }}"
+                                           data-status="{{ quarter.status }}"
+                                           data-type="quarterly"
+                                           {% if not quarter.can_pay and quarter.status != 'rejected' %}disabled{% endif %}>
+                                    <div class="quarter-content">
+                                        <span class="quarter-name">Quarter {{ quarter.quarter }}</span>
+                                        <span class="quarter-months">{{ quarter.months|join:" - " }}</span>
+                                        
+                                        <div class="quarter-amounts">
+                                            <span class="amount-due">Due: KES {{ quarter.amount_due|floatformat:2 }}</span>
+                                            <span class="amount-paid">Paid: KES {{ quarter.amount_paid|floatformat:2 }}</span>
+                                            <span class="amount-balance">Balance: KES {{ quarter.balance|floatformat:2 }}</span>
+                                        </div>
+                                        
+                                        <div class="progress-bar-container">
+                                            <div class="progress-bar" style="width: {{ quarter.progress }}%;">{{ quarter.progress|floatformat:0 }}%</div>
+                                        </div>
+                                        
+                                        <div class="quarter-status">
+                                            {% if quarter.status == 'paid' %}
+                                                <span class="paid-badge">Fully Paid ✓</span>
+                                            {% elif quarter.status == 'partial' %}
+                                                <span class="partial-badge">Partially Paid</span>
+                                            {% elif quarter.status == 'waiting_approval' %}
+                                                <span class="waiting-badge">Waiting Approval</span>
+                                            {% elif quarter.status == 'rejected' %}
+                                                <span class="rejected-badge">Payment Rejected</span>
+                                                {% if quarter.has_rejected_request %}
+                                                    <div class="rejected-message">
+                                                        <small>Admin note: Your cash request was declined</small>
+                                                    </div>
+                                                {% endif %}
+                                                <a href="{% url 'request_again' quarter.id %}" class="request-again-btn">
+                                                    Request Again
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </label>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="payment-section quarterly-payment-options" id="quarterlyPaymentOptions" style="display: none;">
+                    <h3>Quarterly Payment Options</h3>
+                    <div class="payment-type-selector">
+                        <label class="payment-type">
+                            <input type="radio" name="payment_type" value="full" checked>
+                            <div class="type-content">
+                                <span class="type-name">Pay Full Amount</span>
+                                <span class="type-desc">Pay the remaining balance in full</span>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-type">
+                            <input type="radio" name="payment_type" value="partial">
+                            <div class="type-content">
+                                <span class="type-name">Pay Partial Amount</span>
+                                <span class="type-desc">Make a partial payment towards this quarter</span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="partial-amount-field" id="partialAmountField" style="display: none;">
+                        <label for="partial_amount">Enter Amount (KES):</label>
+                        <input type="number" name="partial_amount" id="partial_amount" class="form-control" min="1" step="1" placeholder="Enter whole number">
+                        <small class="form-hint">Must be a whole number less than the remaining balance</small>
+                        <div class="error-message" id="partialAmountError"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="payment-section">
+                <h3>Payment Method</h3>
+                <div class="payment-methods">
+                    <label class="payment-method">
+                        <input type="radio" name="payment_mode" value="mpesa" checked>
+                        <div class="method-content">
+                            <span class="method-name">M-Pesa</span>
+                            <span class="method-desc">Pay via M-Pesa STK Push</span>
+                        </div>
+                    </label>
+                    
+                    <label class="payment-method">
+                        <input type="radio" name="payment_mode" value="cash">
+                        <div class="method-content">
+                            <span class="method-name">Cash</span>
+                            <span class="method-desc">Pay cash to admin (requires approval)</span>
+                        </div>
+                    </label>
+                </div>
+            </div>
+            
+            <div class="payment-section mpesa-fields" id="mpesaFields">
+                <h3>M-Pesa Details</h3>
+                <div class="form-group">
+                    <label for="{{ form.mpesa_phone.id_for_label }}">M-Pesa Phone Number</label>
+                    {{ form.mpesa_phone }}
+                    <small class="form-hint">Format: 2547XXXXXXXX</small>
+                    {% if form.mpesa_phone.errors %}
+                        <span class="error-message">{{ form.mpesa_phone.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="payment-section cash-fields" id="cashFields" style="display: none;">
+                <h3>Cash Payment Details</h3>
+                <div class="form-group">
+                    <label for="cash_notes">Additional Notes (Optional)</label>
+                    <textarea name="cash_notes" id="cash_notes" rows="3" class="form-control" placeholder="E.g., I will pay during the meeting on Friday"></textarea>
+                    <small class="form-hint">This will be sent to admin for approval</small>
+                </div>
+            </div>
+            
+            <div class="payment-summary" id="paymentSummary">
+                <h3>Payment Summary</h3>
+                <div id="selectedItemsList" class="selected-items-list">
+                    <p class="empty-selection">No items selected</p>
+                </div>
+                <div class="summary-row">
+                    <span>Selected Items:</span>
+                    <span id="selectedCount">0</span>
+                </div>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">KES 0.00</span>
+                </div>
+                <div class="summary-row">
+                    <span>Fines:</span>
+                    <span id="finesTotal">KES 0.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total to Pay:</span>
+                    <span id="grandTotal">KES 0.00</span>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg" id="submitBtn" disabled>
+                    Proceed to Payment
+                </button>
+                <a href="{% url 'contributions' %}" class="btn btn-link">Cancel</a>
+            </div>
+        </form>
+    {% else %}
+        <div class="empty-state">
+            <p>No pending contributions at this time.</p>
+            <a href="{% url 'contributions' %}" class="btn btn-secondary">Back to Contributions</a>
+        </div>
+    {% endif %}
+</section>
+
+<style>
+.payment-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.5rem;
+}
+
+.tab-btn {
+    padding: 0.5rem 1.5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    color: #6b7280;
+    border-radius: 0.375rem 0.375rem 0 0;
+    transition: all 0.2s;
+}
+
+.tab-btn:hover {
+    color: #2563eb;
+    background: #f3f4f6;
+}
+
+.tab-btn.active {
+    color: #2563eb;
+    border-bottom: 2px solid #2563eb;
+    margin-bottom: -0.5rem;
+}
+
+.tab-content {
+    display: none;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+.year-selector {
+    margin-bottom: 1.5rem;
+    max-width: 200px;
+}
+
+.year-selector label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.month-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    position: relative;
+}
+
+.month-card.selectable:hover {
+    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.month-card.selected {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.month-card.selected .month-name,
+.month-card.selected .month-amount,
+.month-card.selected .late-badge {
+    color: white;
+}
+
+.month-card.selected .month-amount {
+    color: #fbbf24;
+}
+
+.month-card.rejected-month {
+    border-color: #ef4444;
+    background: #fef2f2;
+    border-width: 2px;
+}
+
+.month-card.rejected-month .rejected-badge {
+    background: #ef4444;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    display: inline-block;
+    margin-top: 0.25rem;
+}
+
+.month-card.rejected-month .rejected-message {
+    color: #ef4444;
+    font-size: 0.7rem;
+    margin-top: 0.25rem;
+    font-style: italic;
+}
+
+.month-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.month-card input[type="checkbox"] {
+    display: none;
+}
+
+.month-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.month-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1f2937;
+}
+
+.month-amount {
+    font-weight: 500;
+    color: #2563eb;
+}
+
+.late-badge {
+    font-size: 0.75rem;
+    color: #e65100;
+    font-weight: 600;
+}
+
+.paid-badge {
+    font-size: 0.75rem;
+    color: #10b981;
+    font-weight: 600;
+    background: #d1fae5;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    display: inline-block;
+}
+
+.waiting-badge {
+    font-size: 0.75rem;
+    color: #f59e0b;
+    font-weight: 600;
+    background: #fef3c7;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    display: inline-block;
+}
+
+.rejected-badge {
+    font-size: 0.75rem;
+    color: #ef4444;
+    font-weight: 600;
+    background: #fee2e2;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    display: inline-block;
+    border: 1px solid #ef4444;
+}
+
+.request-again-btn {
+    background: #ef4444;
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 0.5rem;
+    transition: all 0.2s;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: center;
+}
+
+.request-again-btn:hover {
+    background: #dc2626;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    color: #6b7280;
+    font-weight: 600;
+}
+
+.month-card.paid-month {
+    border-color: #10b981;
+    background: #d1fae5;
+}
+
+.month-card.paid-month.selected {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.month-card.paid-month.selected .month-name {
+    color: white;
+}
+
+.month-card.paid-late-month {
+    border-color: #f59e0b;
+    background: #fef3c7;
+}
+
+.month-card.paid-late-month.selected {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.month-card.paid-late-month.selected .month-name {
+    color: white;
+}
+
+.month-card.overdue-month {
+    border-color: #ef4444;
+    background: #fee2e2;
+}
+
+.month-card.overdue-month.selected {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.month-card.overdue-month.selected .month-name {
+    color: white;
+}
+
+.month-card.pending-month {
+    border-color: #3b82f6;
+    background: #dbeafe;
+}
+
+.month-card.pending-month.selected {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.month-card.pending-month.selected .month-name {
+    color: white;
+}
+
+.month-card.pending-late-month {
+    border-color: #f97316;
+    background: #ffedd5;
+}
+
+.month-card.pending-late-month.selected {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.month-card.pending-late-month.selected .month-name {
+    color: white;
+}
+
+.month-card.future-month {
+    border-color: #94a3b8;
+    background: #f1f5f9;
+    opacity: 0.6;
+}
+
+.month-card.waiting-approval-month {
+    border-color: #f59e0b;
+    background: #fef3c7;
+    border-style: dashed;
+}
+
+.quarterly-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    min-height: 200px;
+}
+
+.quarter-card {
+    background: white;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: block;
+}
+
+.quarter-card.selectable:hover {
+    border-color: #2563eb;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+.quarter-card.selected {
+    background: #1f2937;
+    border-color: #1f2937;
+}
+
+.quarter-card.selected .quarter-name,
+.quarter-card.selected .quarter-months,
+.quarter-card.selected .amount-due,
+.quarter-card.selected .amount-paid,
+.quarter-card.selected .amount-balance {
+    color: white;
+}
+
+.quarter-card.selected .amount-balance {
+    color: #fbbf24;
+}
+
+.quarter-card.rejected {
+    border-color: #ef4444;
+    background: #fef2f2;
+    border-width: 2px;
+}
+
+.quarter-card.rejected .rejected-badge {
+    background: #ef4444;
+    color: white;
+}
+
+.quarter-card.rejected .rejected-message {
+    color: #ef4444;
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+    font-style: italic;
+}
+
+.quarter-card.disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.quarter-card input[type="checkbox"] {
+    display: none;
+}
+
+.quarter-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.quarter-name {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1f2937;
+}
+
+.quarter-months {
+    font-size: 0.875rem;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.quarter-amounts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    font-size: 0.875rem;
+    background: #f9fafb;
+    padding: 0.75rem;
+    border-radius: 0.5rem;
+}
+
+.quarter-card.selected .quarter-amounts {
+    background: #374151;
+}
+
+.amount-due {
+    color: #2563eb;
+}
+
+.amount-paid {
+    color: #10b981;
+}
+
+.amount-balance {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
+.progress-bar-container {
+    width: 100%;
+    height: 24px;
+    background: #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.progress-bar {
+    height: 100%;
+    background: #2563eb;
+    color: white;
+    font-size: 0.75rem;
+    text-align: center;
+    line-height: 24px;
+    border-radius: 12px;
+    transition: width 0.3s ease;
+}
+
+.partial-badge {
+    font-size: 0.75rem;
+    color: #2563eb;
+    font-weight: 600;
+    background: #dbeafe;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    display: inline-block;
+    text-align: center;
+}
+
+.quarterly-payment-options {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.payment-type-selector {
+    display: flex;
+    gap: 1rem;
+    margin: 1.5rem 0;
+}
+
+.payment-type {
+    flex: 1;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.payment-type:hover {
+    border-color: #2563eb;
+    background: #f3f4f6;
+}
+
+.payment-type input[type="radio"] {
+    display: none;
+}
+
+.payment-type input[type="radio"]:checked + .type-content {
+    color: #2563eb;
+}
+
+.type-content {
+    text-align: center;
+}
+
+.type-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.type-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.partial-amount-field {
+    margin-top: 1rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e5e7eb;
+}
+
+.partial-amount-field label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.payment-methods {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.payment-method {
+    flex: 1;
+    border: 2px solid #e5e7eb;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.payment-method:hover {
+    border-color: #2563eb;
+}
+
+.payment-method input[type="radio"] {
+    display: none;
+}
+
+.payment-method input[type="radio"]:checked + .method-content {
+    color: #2563eb;
+}
+
+.method-content {
+    text-align: center;
+}
+
+.method-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.method-desc {
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.selected-items-list {
+    background: #f9fafb;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-bottom: 1rem;
+    min-height: 80px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+.selected-month-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem;
+    border-bottom: 1px dashed #e5e7eb;
+    font-size: 0.875rem;
+}
+
+.selected-month-item:last-child {
+    border-bottom: none;
+}
+
+.selected-month-item.late {
+    color: #e65100;
+}
+
+.selected-month-item.waiting {
+    color: #f59e0b;
+    font-style: italic;
+}
+
+.selected-month-item.partial {
+    color: #2563eb;
+    font-style: italic;
+}
+
+.selected-month-item.rejected {
+    color: #ef4444;
+    font-style: italic;
+}
+
+.empty-selection {
+    color: #9ca3af;
+    text-align: center;
+    padding: 0.5rem;
+}
+
+.payment-summary {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px dashed #e5e7eb;
+}
+
+.summary-row.total {
+    border-bottom: none;
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #2563eb;
+    padding-top: 1rem;
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: all 0.2s;
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.form-hint {
+    display: block;
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+}
+
+.error-message {
+    color: #ef4444;
+    font-size: 0.875rem;
+    margin-top: 0.25rem;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: white;
+    border-radius: 0.75rem;
+    border: 1px solid #e5e7eb;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.btn-primary {
+    background: #2563eb;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #1d4ed8;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background: #e5e7eb;
+    color: #1f2937;
+}
+
+.btn-secondary:hover {
+    background: #d1d5db;
+}
+
+.btn-link {
+    background: none;
+    color: #6b7280;
+    text-decoration: underline;
+}
+
+.btn-link:hover {
+    color: #1f2937;
+}
+
+.btn-lg {
+    padding: 1rem 2rem;
+    font-size: 1.125rem;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+@media (max-width: 768px) {
+    .calendar-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .payment-methods,
+    .payment-type-selector {
+        flex-direction: column;
+    }
+    
+    .quarterly-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+let currentTab = 'monthly';
+let currentYear = {{ selected_year|default:today.year }};
+let currentQuarterYear = {{ selected_quarter_year|default:today.year }};
+
+function showTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    
+    document.querySelector(`.tab-btn[onclick="showTab('${tab}')"]`).classList.add('active');
+    document.getElementById(`${tab}Tab`).classList.add('active');
+    
+    updateSummary();
+}
+
+function changeYear(year) {
+    window.location.href = `?year=${year}&tab=monthly`;
+}
+
+function changeQuarterYear(year) {
+    window.location.href = `?quarter_year=${year}&tab=quarterly`;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const tabParam = urlParams.get('tab');
+    
+    if (tabParam && (tabParam === 'monthly' || tabParam === 'quarterly')) {
+        currentTab = tabParam;
+        showTab(tabParam);
+    }
+    
+    const monthCheckboxes = document.querySelectorAll('input[name="months"]');
+    const monthCards = document.querySelectorAll('.month-card');
+    const quarterCheckboxes = document.querySelectorAll('input[name="quarterly"]');
+    const quarterCards = document.querySelectorAll('.quarter-card');
+    const paymentModeInputs = document.querySelectorAll('input[name="payment_mode"]');
+    const paymentTypeRadios = document.querySelectorAll('input[name="payment_type"]');
+    const partialAmount = document.getElementById('partial_amount');
+    const partialAmountError = document.getElementById('partialAmountError');
+    const quarterlyPaymentOptions = document.getElementById('quarterlyPaymentOptions');
+    const partialAmountField = document.getElementById('partialAmountField');
+    const mpesaFields = document.getElementById('mpesaFields');
+    const cashFields = document.getElementById('cashFields');
+    const selectedCount = document.getElementById('selectedCount');
+    const subtotal = document.getElementById('subtotal');
+    const finesTotal = document.getElementById('finesTotal');
+    const grandTotal = document.getElementById('grandTotal');
+    const submitBtn = document.getElementById('submitBtn');
+    const selectedItemsList = document.getElementById('selectedItemsList');
+    
+    monthCards.forEach((card) => {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        if (checkbox && !checkbox.disabled) {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+                updateSummary();
+            });
+        }
+    });
+    
+    quarterCards.forEach((card) => {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        if (checkbox && !checkbox.disabled) {
+            checkbox.addEventListener('change', function() {
+                if (this.checked) {
+                    card.classList.add('selected');
+                } else {
+                    card.classList.remove('selected');
+                }
+                updateQuarterlySelection();
+                updateSummary();
+            });
+        }
+    });
+    
+    function updateQuarterlySelection() {
+        const anyQuarterChecked = Array.from(quarterCheckboxes).some(cb => cb.checked);
+        
+        if (anyQuarterChecked) {
+            quarterlyPaymentOptions.style.display = 'block';
+        } else {
+            quarterlyPaymentOptions.style.display = 'none';
+            document.querySelector('input[name="payment_type"][value="full"]').checked = true;
+            partialAmountField.style.display = 'none';
+            partialAmount.value = '';
+            partialAmountError.textContent = '';
+        }
+    }
+    
+    paymentTypeRadios.forEach(radio => {
+        radio.addEventListener('change', function() {
+            if (this.value === 'partial') {
+                partialAmountField.style.display = 'block';
+            } else {
+                partialAmountField.style.display = 'none';
+                partialAmount.value = '';
+                partialAmountError.textContent = '';
+            }
+            updateSummary();
+        });
+    });
+    
+    partialAmount.addEventListener('input', function() {
+        const value = this.value;
+        const selectedQuarter = document.querySelector('input[name="quarterly"]:checked');
+        
+        if (selectedQuarter && value) {
+            const balance = parseFloat(selectedQuarter.dataset.balance);
+            const intValue = parseInt(value);
+            
+            if (!value) {
+                partialAmountError.textContent = '';
+                this.setCustomValidity('');
+            } else if (isNaN(intValue) || intValue <= 0) {
+                partialAmountError.textContent = 'Please enter a valid positive number';
+                this.setCustomValidity('Invalid amount');
+            } else if (intValue >= balance) {
+                partialAmountError.textContent = `Amount must be less than KES ${balance}`;
+                this.setCustomValidity('Amount too high');
+            } else if (intValue.toString() !== value) {
+                partialAmountError.textContent = 'Amount must be a whole number';
+                this.setCustomValidity('Must be whole number');
+            } else {
+                partialAmountError.textContent = '';
+                this.setCustomValidity('');
+            }
+        }
+        updateSummary();
+    });
+    
+    function updateSummary() {
+        let count = 0;
+        let sub = 0;
+        let fines = 0;
+        let selectedHtml = '';
+        const paymentType = document.querySelector('input[name="payment_type"]:checked')?.value || 'full';
+        
+        if (currentTab === 'monthly') {
+            monthCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    count++;
+                    const amount = parseFloat(cb.dataset.amount) || 0;
+                    const fine = parseFloat(cb.dataset.fine) || 0;
+                    const monthName = cb.dataset.name;
+                    const year = cb.dataset.year;
+                    const status = cb.dataset.status;
+                    
+                    sub += amount;
+                    fines += fine;
+                    
+                    let statusClass = fine > 0 ? 'late' : '';
+                    if (status === 'waiting_approval') {
+                        statusClass = 'waiting';
+                    } else if (status === 'rejected') {
+                        statusClass = 'rejected';
+                    }
+                    
+                    selectedHtml += `<div class="selected-month-item ${statusClass}">
+                        <span>${monthName} ${year}</span>
+                        <span>KES ${amount.toFixed(2)}</span>
+                    </div>`;
+                }
+            });
+        } else if (currentTab === 'quarterly') {
+            quarterCheckboxes.forEach(cb => {
+                if (cb.checked) {
+                    count++;
+                    const balance = parseFloat(cb.dataset.balance) || 0;
+                    const quarter = cb.dataset.quarter;
+                    const year = cb.dataset.year;
+                    const status = cb.dataset.status;
+                    
+                    let amount = balance;
+                    let statusClass = '';
+                    
+                    if (paymentType === 'partial' && partialAmount.value) {
+                        amount = parseInt(partialAmount.value) || 0;
+                        if (amount > balance) amount = balance;
+                        statusClass = 'partial';
+                    }
+                    
+                    if (status === 'waiting_approval') {
+                        statusClass = 'waiting';
+                    } else if (status === 'rejected') {
+                        statusClass = 'rejected';
+                    }
+                    
+                    sub += amount;
+                    
+                    selectedHtml += `<div class="selected-month-item ${statusClass}">
+                        <span>Quarter ${quarter} ${year}</span>
+                        <span>KES ${amount.toFixed(2)}</span>
+                    </div>`;
+                }
+            });
+        }
+        
+        if (selectedHtml) {
+            selectedItemsList.innerHTML = selectedHtml;
+        } else {
+            selectedItemsList.innerHTML = '<p class="empty-selection">No items selected</p>';
+        }
+        
+        selectedCount.textContent = count;
+        subtotal.textContent = 'KES ' + sub.toFixed(2);
+        finesTotal.textContent = 'KES ' + fines.toFixed(2);
+        grandTotal.textContent = 'KES ' + (sub + fines).toFixed(2);
+        
+        submitBtn.disabled = count === 0;
+    }
+    
+    paymentModeInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            if (this.value === 'mpesa') {
+                mpesaFields.style.display = 'block';
+                cashFields.style.display = 'none';
+            } else {
+                mpesaFields.style.display = 'none';
+                cashFields.style.display = 'block';
+            }
+        });
+    });
+    
+    document.getElementById('paymentForm').addEventListener('submit', function(e) {
+        const paymentType = document.querySelector('input[name="payment_type"]:checked')?.value;
+        const selectedQuarter = document.querySelector('input[name="quarterly"]:checked');
+        
+        if (paymentType === 'partial' && selectedQuarter) {
+            const balance = parseFloat(selectedQuarter.dataset.balance);
+            const amount = parseInt(partialAmount.value);
+            
+            if (!amount || amount <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid partial amount');
+                return;
+            }
+            
+            if (amount >= balance) {
+                e.preventDefault();
+                alert(`Partial amount must be less than KES ${balance}`);
+                return;
+            }
+            
+            if (amount.toString() !== partialAmount.value) {
+                e.preventDefault();
+                alert('Partial amount must be a whole number');
+                return;
+            }
+        }
+    });
+    
+    updateSummary();
+});
+</script>
+{% endblock %}

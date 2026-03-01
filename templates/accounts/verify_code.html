@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block title %}Verify Code - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>Enter Reset Code</h1>
+            <p class="auth-subtitle">Enter the 6-digit code sent to your email</p>
+            
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                
+                <div class="form-group">
+                    <label for="{{ form.code.id_for_label }}">Verification Code</label>
+                    {{ form.code }}
+                    {% if form.code.errors %}
+                        <span class="error-message">{{ form.code.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block">Verify Code</button>
+                </div>
+                
+                <div class="auth-links">
+                    <a href="{% url 'forgot_password' %}" class="link">Resend Code</a>
+                    <a href="{% url 'login' %}" class="link">Back to Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="payment-status-page">
+    <div class="status-container">
+        <div class="status-icon failed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </div>
+        
+        <h1>Payment Failed</h1>
+        <p class="status-message">
+            {% if error %}
+                {{ error }}
+            {% else %}
+                We were unable to process your payment. Please try again.
+            {% endif %}
+        </p>
+        
+        {% if transaction %}
+            <div class="transaction-details failed">
+                <div class="detail">
+                    <span class="label">Amount:</span>
+                    <span class="value">KES {{ transaction.amount }}</span>
+                </div>
+                <div class="detail">
+                    <span class="label">Error:</span>
+                    <span class="value">{{ transaction.result_desc|default:"Unknown error" }}</span>
+                </div>
+            </div>
+        {% endif %}
+        
+        <div class="status-actions">
+            <a href="{% url 'make_payment' %}" class="btn btn-primary">
+                Try Again
+            </a>
+            <a href="{% url 'contributions' %}" class="btn btn-secondary">
+                Back to Contributions
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

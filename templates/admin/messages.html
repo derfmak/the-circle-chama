@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact Messages - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Contact Messages</h1>
+</section>
+
+<div class="status-tabs">
+    <a href="?status=new" class="status-tab {% if status == 'new' %}active{% endif %}">
+        New <span class="badge">{{ status_counts.new }}</span>
+    </a>
+    <a href="?status=read" class="status-tab {% if status == 'read' %}active{% endif %}">
+        Read <span class="badge">{{ status_counts.read }}</span>
+    </a>
+    <a href="?status=replied" class="status-tab {% if status == 'replied' %}active{% endif %}">
+        Replied <span class="badge">{{ status_counts.replied }}</span>
+    </a>
+    <a href="?status=archived" class="status-tab {% if status == 'archived' %}active{% endif %}">
+        Archived <span class="badge">{{ status_counts.archived }}</span>
+    </a>
+    <a href="{% url 'admin_messages' %}" class="status-tab {% if not status %}active{% endif %}">
+        All <span class="badge">{{ status_counts.new|add:status_counts.read|add:status_counts.replied|add:status_counts.archived }}</span>
+    </a>
+</div>
+
+<section class="filter-section">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <input type="text" name="search" class="form-control" placeholder="Search by name, email, or message..." value="{{ search }}">
+        </div>
+        {% if status %}
+            <input type="hidden" name="status" value="{{ status }}">
+        {% endif %}
+        <button type="submit" class="btn btn-secondary">Search</button>
+        <a href="{% url 'admin_messages' %}{% if status %}?status={{ status }}{% endif %}" class="btn btn-link">Clear</a>
+    </form>
+</section>
+
+<section class="content-section">
+    {% if messages %}
+        <div class="table-responsive">
+            <table class="data-table admin-table">
+                <thead>
+                    <tr>
+                        <th>Status</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Message</th>
+                        <th>Received</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for msg in messages %}
+                        <tr class="{% if msg.status == 'new' %}new-message{% endif %}">
+                            <td>
+                                <span class="badge badge-{{ msg.status }}">
+                                    {{ msg.get_status_display }}
+                                </span>
+                            </td>
+                            <td>{{ msg.name }}</td>
+                            <td>{{ msg.email }}</td>
+                            <td>{{ msg.message|truncatechars:50 }}</td>
+                            <td>{{ msg.created_at|date:"M d, Y H:i" }}</td>
+                            <td class="actions">
+                                <a href="{% url 'admin_message_detail' msg.id %}" class="btn btn-sm btn-primary">View</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if status %}&status={{ status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="btn btn-sm">Previous</a>
+                {% endif %}
+                
+                <span class="page-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if status %}&status={{ status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No messages found.</p>
+    {% endif %}
+</section>
+
+<style>
+.status-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.status-tab {
+    padding: 0.5rem 1rem;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    text-decoration: none;
+    color: var(--dark-text);
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.status-tab:hover {
+    background: var(--light-bg);
+    transform: translateY(-2px);
+}
+
+.status-tab.active {
+    background: var(--primary-color);
+    color: var(--white);
+    border-color: var(--primary-color);
+}
+
+.status-tab .badge {
+    background: rgba(255,255,255,0.2);
+    color: var(--white);
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+}
+
+.status-tab.active .badge {
+    background: var(--white);
+    color: var(--primary-color);
+}
+
+.new-message {
+    background: rgba(26, 95, 122, 0.05);
+    font-weight: 500;
+}
+
+.badge-new {
+    background: #f9a825;
+    color: var(--white);
+}
+
+.badge-read {
+    background: #1565c0;
+    color: var(--white);
+}
+
+.badge-replied {
+    background: #2e7d32;
+    color: var(--white);
+}
+
+.badge-archived {
+    background: #616161;
+    color: var(--white);
+}
+</style>
+{% endblock %}

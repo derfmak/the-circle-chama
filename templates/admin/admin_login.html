@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Login - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="auth-section">
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1>Admin Login</h1>
+            <p class="auth-subtitle">Authorized personnel only</p>
+            
+            <form method="post" class="auth-form" novalidate>
+                {% csrf_token %}
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-error">
+                        {{ form.non_field_errors.0 }}
+                    </div>
+                {% endif %}
+                
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}">Admin Email</label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <span class="error-message">{{ form.username.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    <div class="password-field">
+                        {{ form.password }}
+                        <button type="button" class="toggle-password" onclick="togglePassword('{{ form.password.id_for_label }}')">
+                            Show
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                        <span class="error-message">{{ form.password.errors.0 }}</span>
+                    {% endif %}
+                    <small class="form-hint">Password cannot be pasted. Please type manually.</small>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                </div>
+                
+                <div class="auth-links">
+                    <a href="{% url 'forgot_password' %}" class="link">Forgot Password?</a>
+                    <a href="{% url 'login' %}" class="link">Member Login</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const button = field.nextElementSibling;
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        button.textContent = 'Hide';
+    } else {
+        field.type = 'password';
+        button.textContent = 'Show';
+    }
+}
+
+document.querySelector('input[type="password"]').addEventListener('paste', function(e) {
+    e.preventDefault();
+    alert('Pasting password is not allowed for security reasons. Please type your password manually.');
+});
+</script>
+{% endblock %}

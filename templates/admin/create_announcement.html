@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}New Announcement - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>New Announcement</h1>
+    <a href="{% url 'admin_announcements' %}" class="btn btn-secondary">Back to Announcements</a>
+</section>
+
+<section class="content-section">
+    <form method="post" class="admin-form">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label for="{{ form.title.id_for_label }}">Title *</label>
+            {{ form.title }}
+            {% if form.title.errors %}
+                <span class="error-message">{{ form.title.errors.0 }}</span>
+            {% endif %}
+        </div>
+        
+        <div class="form-group">
+            <label for="{{ form.content.id_for_label }}">Content *</label>
+            {{ form.content }}
+            {% if form.content.errors %}
+                <span class="error-message">{{ form.content.errors.0 }}</span>
+            {% endif %}
+            <small class="form-hint">This announcement will be visible to all members immediately after posting.</small>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">Post Announcement</button>
+            <a href="{% url 'admin_announcements' %}" class="btn btn-link">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

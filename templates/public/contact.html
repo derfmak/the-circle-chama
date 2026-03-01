@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Contact - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Contact Us</h1>
+</section>
+
+<section class="content-section">
+    <div class="container">
+        <div class="contact-grid">
+            <div class="contact-info">
+                <h2>Get In Touch</h2>
+                <p>For membership inquiries or general questions, please reach out to us.</p>
+                
+                <div class="contact-item">
+                    <strong>Email:</strong>
+                    <p>info@thecircle.co.ke</p>
+                </div>
+                
+                <div class="contact-item">
+                    <strong>Phone:</strong>
+                    <p>+254 700 000 000</p>
+                </div>
+                
+                <div class="contact-item">
+                    <strong>Address:</strong>
+                    <p>123 Business Street<br>Nairobi, Kenya</p>
+                </div>
+                
+                <div class="contact-item">
+                    <strong>Meeting Venue:</strong>
+                    <p>Community Center Hall<br>Every Last Saturday</p>
+                </div>
+            </div>
+            
+            <div class="contact-form-wrapper">
+                <h2>Send Message</h2>
+                <form class="contact-form" method="post" action="">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label for="name">Full Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-control">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" class="form-control" rows="5" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Send Message</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

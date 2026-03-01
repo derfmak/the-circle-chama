@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ announcement.title }} - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <a href="{% url 'announcements_list' %}" class="back-link">← Back to Announcements</a>
+</section>
+
+<section class="content-section">
+    <article class="announcement-full">
+        <header class="announcement-header-full">
+            <h1>{{ announcement.title }}</h1>
+            <div class="announcement-meta">
+                <span class="date">{{ announcement.created_at|date:"F d, Y at H:i" }}</span>
+                {% if announcement.is_edited %}
+                    <span class="edited-tag">Edited {{ announcement.updated_at|date:"F d, Y" }}</span>
+                {% endif %}
+            </div>
+        </header>
+        
+        <div class="announcement-content">
+            {{ announcement.content|linebreaks }}
+        </div>
+        
+        <footer class="announcement-footer-full">
+            <p>Posted by {{ announcement.created_by.get_full_name|default:"Admin" }}</p>
+        </footer>
+    </article>
+</section>
+{% endblock %}

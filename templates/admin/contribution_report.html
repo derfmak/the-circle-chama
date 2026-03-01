@@ -1,0 +1,471 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load members_filters %}
+
+{% block title %}Contribution Report - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Contribution Report</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_contributions' %}" class="btn btn-secondary">Back to Contributions</a>
+        <button onclick="window.print()" class="btn btn-info">Print Report</button>
+        <button onclick="exportToCSV()" class="btn btn-success">Export CSV</button>
+    </div>
+</section>
+
+<section class="filter-section">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <label>Year</label>
+            <select name="year" class="form-control" onchange="this.form.submit()">
+                {% for y in years %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <label>Month</label>
+            <select name="month" class="form-control" onchange="this.form.submit()">
+                <option value="">All Months</option>
+                {% for m in months %}
+                    <option value="{{ m }}" {% if m == month %}selected{% endif %}>{{ m|month_name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group" style="position: relative;">
+            <label>Member</label>
+            <input type="text" id="memberSearch" class="form-control" placeholder="Search member..." autocomplete="off" value="{{ member_search }}">
+            <div id="memberResults" class="search-results" style="display: none;"></div>
+            <input type="hidden" name="member" id="selectedMember" value="{{ selected_member_id }}">
+        </div>
+        <div class="filter-group">
+            <label>Status</label>
+            <select name="status" class="form-control" onchange="this.form.submit()">
+                <option value="">All Status</option>
+                <option value="paid" {% if status == 'paid' %}selected{% endif %}>Paid On Time</option>
+                <option value="paid_late" {% if status == 'paid_late' %}selected{% endif %}>Paid Late</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="partial" {% if status == 'partial' %}selected{% endif %}>Partial</option>
+            </select>
+        </div>
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'admin_contribution_report' %}" class="btn btn-link">Clear</a>
+    </form>
+</section>
+
+<section class="content-section">
+    <div class="summary-cards">
+        <div class="summary-card">
+            <div class="summary-icon total"></div>
+            <div class="summary-content">
+                <h4>Total Expected</h4>
+                <p class="summary-value">KES {{ total_expected|default:"0.00"|intcomma }}</p>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon collected"></div>
+            <div class="summary-content">
+                <h4>Total Collected</h4>
+                <p class="summary-value">KES {{ total_collected|default:"0.00"|intcomma }}</p>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon fines"></div>
+            <div class="summary-content">
+                <h4>Total Fines</h4>
+                <p class="summary-value">KES {{ total_fines|default:"0.00"|intcomma }}</p>
+            </div>
+        </div>
+        <div class="summary-card">
+            <div class="summary-icon rate"></div>
+            <div class="summary-content">
+                <h4>Collection Rate</h4>
+                <p class="summary-value">{{ collection_rate|default:"0" }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table admin-table" id="reportTable">
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Month</th>
+                    <th>Due Date</th>
+                    <th>Amount Due</th>
+                    <th>Fine</th>
+                    <th>Total Due</th>
+                    <th>Paid</th>
+                    <th>Status</th>
+                    <th>Payment Date</th>
+                    <th>Method</th>
+                    <th>Receipt</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in contributions %}
+                    <tr class="{% if item.status == 'paid_late' %}late-row{% elif item.status == 'pending' %}pending-row{% endif %}">
+                        <td>
+                            <strong>{{ item.user.get_full_name }}</strong><br>
+                            <small>{{ item.user.email }}</small>
+                        </td>
+                        <td>{{ item.month|month_name }} {{ item.year }}</td>
+                        <td>{{ item.due_date|date:"d/m/Y" }}</td>
+                        <td>KES {{ item.amount_due|floatformat:2|intcomma }}</td>
+                        <td>
+                            {% if item.fine_amount > 0 %}
+                                <span class="text-danger">KES {{ item.fine_amount|floatformat:2|intcomma }}</span>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>KES {{ item.total_due|floatformat:2|intcomma }}</td>
+                        <td>KES {{ item.amount_paid|floatformat:2|intcomma }}</td>
+                        <td>
+                            <span class="badge badge-{{ item.status }}">
+                                {{ item.get_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if item.paid_at %}
+                                {{ item.paid_at|date:"d/m/Y H:i" }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.payment_method %}
+                                {{ item.get_payment_method_display }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if item.mpesa_receipt %}
+                                {{ item.mpesa_receipt }}
+                            {% elif item.payment_method == 'cash' %}
+                                Cash
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="11" class="empty-cell">No contribution data found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    {% if contributions.has_other_pages %}
+        <div class="pagination">
+            {% if contributions.has_previous %}
+                <a href="?page={{ contributions.previous_page_number }}{% if year %}&year={{ year }}{% endif %}{% if month %}&month={{ month }}{% endif %}{% if member %}&member={{ member }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="btn btn-sm">Previous</a>
+            {% endif %}
+            
+            <span class="page-info">
+                Page {{ contributions.number }} of {{ contributions.paginator.num_pages }}
+            </span>
+            
+            {% if contributions.has_next %}
+                <a href="?page={{ contributions.next_page_number }}{% if year %}&year={{ year }}{% endif %}{% if month %}&month={{ month }}{% endif %}{% if member %}&member={{ member }}{% endif %}{% if status %}&status={{ status }}{% endif %}" class="btn btn-sm">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+</section>
+
+<style>
+.header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.filter-section {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 150px;
+    position: relative;
+}
+
+.filter-group label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-weight: 500;
+    color: var(--dark-text);
+}
+
+.summary-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.summary-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.summary-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    background: var(--light-bg);
+}
+
+.summary-icon.total { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.summary-icon.collected { background: linear-gradient(135deg, #10b981, #059669); }
+.summary-icon.fines { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.summary-icon.rate { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+.summary-content h4 {
+    font-size: 0.875rem;
+    color: var(--medium-text);
+    margin-bottom: 0.25rem;
+}
+
+.summary-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 0;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: var(--shadow-lg);
+}
+
+.search-result-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.search-result-item:hover {
+    background: var(--light-bg);
+}
+
+.search-result-item.selected {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
+}
+
+.data-table th {
+    background: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.data-table td {
+    vertical-align: middle;
+}
+
+.late-row {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.pending-row {
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.badge-paid {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.badge-paid_late {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.badge-pending {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.badge-partial {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.text-danger {
+    color: #dc2626;
+    font-weight: 500;
+}
+
+.empty-cell {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--light-text);
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .summary-cards {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media print {
+    .header-actions, .filter-section, .footer, .navbar, .pagination {
+        display: none !important;
+    }
+    
+    .data-table {
+        font-size: 10pt;
+    }
+    
+    .badge {
+        border: 1px solid #000;
+        color: #000 !important;
+        background: none !important;
+    }
+    
+    .late-row, .pending-row {
+        background: none !important;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const memberSearch = document.getElementById('memberSearch');
+    const memberResults = document.getElementById('memberResults');
+    const selectedMember = document.getElementById('selectedMember');
+    
+    let searchTimeout;
+    
+    if (memberSearch) {
+        memberSearch.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                memberResults.style.display = 'none';
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                fetch(`/admin-panel/members/search/?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        memberResults.innerHTML = '';
+                        
+                        if (data.members.length === 0) {
+                            memberResults.innerHTML = '<div class="search-result-item">No members found</div>';
+                        } else {
+                            data.members.forEach(member => {
+                                const div = document.createElement('div');
+                                div.className = 'search-result-item';
+                                div.innerHTML = `<strong>${member.name}</strong><br><small>${member.email}</small>`;
+                                div.dataset.id = member.id;
+                                div.dataset.name = member.name;
+                                div.addEventListener('click', function() {
+                                    memberSearch.value = member.name;
+                                    selectedMember.value = member.id;
+                                    memberResults.style.display = 'none';
+                                    document.querySelector('.filter-form').submit();
+                                });
+                                memberResults.appendChild(div);
+                            });
+                        }
+                        
+                        memberResults.style.display = 'block';
+                    });
+            }, 300);
+        });
+    }
+    
+    document.addEventListener('click', function(e) {
+        if (memberSearch && !memberSearch.contains(e.target) && !memberResults.contains(e.target)) {
+            memberResults.style.display = 'none';
+        }
+    });
+});
+
+function exportToCSV() {
+    const table = document.getElementById('reportTable');
+    const rows = table.querySelectorAll('tr');
+    const csv = [];
+    
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('th, td');
+        const rowData = [];
+        cells.forEach(cell => {
+            let text = cell.innerText.replace(/,/g, ';').replace(/\n/g, ' ').trim();
+            rowData.push('"' + text + '"');
+        });
+        if (rowData.length > 0 && rowData[0] !== '""') {
+            csv.push(rowData.join(','));
+        }
+    });
+    
+    if (csv.length > 0) {
+        const csvContent = csv.join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+        
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'contribution_report.csv');
+        link.style.visibility = 'hidden';
+        
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+}
+</script>
+{% endblock %}

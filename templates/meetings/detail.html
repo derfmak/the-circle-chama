@@ -1,0 +1,376 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ meeting.title }} - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>{{ meeting.title }}</h1>
+    <span class="badge badge-{{ meeting.status }}">{{ meeting.get_status_display }}</span>
+</section>
+
+<section class="content-section">
+    <div class="meeting-details-card">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="detail-label">Date & Time</span>
+                <span class="detail-value">{{ meeting.date|date:"l, F d, Y at H:i" }}</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">Venue</span>
+                <span class="detail-value">{{ meeting.venue }}</span>
+            </div>
+            
+            <div class="detail-item">
+                <span class="detail-label">Facilitation Fee</span>
+                <span class="detail-value">KES {{ meeting.facilitation_fee }}</span>
+            </div>
+        </div>
+        
+        <div class="detail-block">
+            <span class="detail-label">Purpose</span>
+            <p class="detail-text">{{ meeting.purpose }}</p>
+        </div>
+        
+        {% if meeting.summary %}
+            <div class="detail-block highlight">
+                <span class="detail-label">Meeting Summary</span>
+                <p class="detail-text">{{ meeting.summary }}</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+{% if attendance %}
+    <section class="content-section">
+        <h2>Your Attendance</h2>
+        <div class="attendance-card">
+            <div class="attendance-row">
+                <span class="label">Your Response:</span>
+                <span class="badge badge-{{ attendance.status }}">
+                    {{ attendance.get_status_display }}
+                </span>
+            </div>
+            
+            {% if attendance.apology_reason %}
+                <div class="attendance-row">
+                    <span class="label">Apology Reason:</span>
+                    <p class="apology-text">{{ attendance.apology_reason }}</p>
+                </div>
+            {% endif %}
+            
+            {% if meeting.status == 'completed' %}
+                <div class="attendance-row">
+                    <span class="label">Actual Attendance:</span>
+                    <span class="badge badge-{{ attendance.actual_attendance }}">
+                        {{ attendance.get_actual_attendance_display }}
+                    </span>
+                </div>
+            {% endif %}
+            
+            <div class="attendance-row">
+                <span class="label">Payment Status:</span>
+                <span class="badge badge-{{ attendance.payment_status }}">
+                    {{ attendance.get_payment_status_display }}
+                </span>
+            </div>
+            
+            {% if attendance.facilitation_paid > 0 %}
+                <div class="attendance-row">
+                    <span class="label">Amount Paid:</span>
+                    <span class="value">KES {{ attendance.facilitation_paid }}</span>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+    
+    {% if meeting.status == 'scheduled' and attendance.payment_status == 'unpaid' %}
+        <section class="content-section">
+            <h2>Pay Facilitation Fee</h2>
+            
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            
+            <div class="payment-options">
+                <form method="post" action="{% url 'pay_facilitation' meeting.id %}" id="paymentForm">
+                    {% csrf_token %}
+                    <input type="hidden" name="attendance_id" value="{{ attendance.id }}">
+                    
+                    <div class="payment-methods">
+                        <label class="payment-method">
+                            <input type="radio" name="payment_mode" value="mpesa" checked>
+                            <div class="method-content">
+                                <span class="method-name">M-Pesa</span>
+                                <span class="method-desc">Pay via M-Pesa STK Push</span>
+                            </div>
+                        </label>
+                        
+                        <label class="payment-method">
+                            <input type="radio" name="payment_mode" value="cash">
+                            <div class="method-content">
+                                <span class="method-name">Cash</span>
+                                <span class="method-desc">Pay cash to admin (requires approval)</span>
+                            </div>
+                        </label>
+                    </div>
+                    
+                    <div class="form-group mpesa-fields" id="mpesaFields">
+                        <label for="mpesa_phone">M-Pesa Phone Number</label>
+                        <input type="text" id="mpesa_phone" name="mpesa_phone" class="form-control" 
+                               placeholder="254712345678" value="{{ user.phone_number }}">
+                        <small class="form-hint">Enter the phone number for M-Pesa payment</small>
+                    </div>
+                    
+                    <div class="form-group cash-fields" id="cashFields" style="display: none;">
+                        <label for="cash_notes">Notes (Optional)</label>
+                        <textarea name="cash_notes" id="cash_notes" class="form-control" rows="2" 
+                                  placeholder="E.g., I will pay during the meeting"></textarea>
+                    </div>
+                    
+                    <div class="payment-summary">
+                        <p>Amount to Pay: <strong>KES {{ meeting.facilitation_fee }}</strong></p>
+                        <p class="payment-desc">Payment will be sent to: <strong>{{ meeting.mpesa_number }}</strong></p>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary btn-lg">Proceed to Payment</button>
+                </form>
+            </div>
+        </section>
+    {% endif %}
+    
+    {% if meeting.status == 'scheduled' and attendance.payment_status == 'pending' %}
+        <section class="content-section">
+            <div class="alert alert-info">
+                <h4>Payment Pending</h4>
+                <p>Your cash payment request has been submitted and is awaiting admin approval.</p>
+            </div>
+        </section>
+    {% endif %}
+    
+    {% if meeting.status == 'scheduled' and attendance.payment_status == 'paid' %}
+        <section class="content-section">
+            <div class="alert alert-success">
+                <h4>Payment Confirmed</h4>
+                <p>Your payment has been received. Thank you!</p>
+            </div>
+        </section>
+    {% endif %}
+{% endif %}
+
+<section class="content-section">
+    <a href="{% url 'meetings_list' %}" class="btn btn-secondary">Back to Meetings</a>
+</section>
+
+<style>
+.meeting-details-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 2rem;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-color);
+}
+
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail-label {
+    font-size: 0.875rem;
+    color: var(--medium-text);
+    margin-bottom: 0.25rem;
+}
+
+.detail-value {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.detail-block {
+    margin-top: 1.5rem;
+}
+
+.detail-block.highlight {
+    background: var(--light-bg);
+    padding: 1.5rem;
+    border-radius: var(--radius);
+    border-left: 4px solid var(--primary-color);
+}
+
+.detail-text {
+    margin-top: 0.5rem;
+    color: var(--medium-text);
+    line-height: 1.6;
+}
+
+.attendance-card {
+    background: var(--light-bg);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+}
+
+.attendance-row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.attendance-row:last-child {
+    border-bottom: none;
+}
+
+.attendance-row .label {
+    min-width: 150px;
+    font-weight: 500;
+    color: var(--medium-text);
+}
+
+.attendance-row .value {
+    font-weight: 600;
+    color: var(--dark-text);
+}
+
+.apology-text {
+    flex: 1;
+    margin: 0;
+    color: var(--warning-color);
+    font-style: italic;
+}
+
+.payment-options {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+.payment-methods {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.payment-method {
+    flex: 1;
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 1rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.payment-method:hover {
+    border-color: var(--primary-color);
+}
+
+.payment-method input[type="radio"] {
+    display: none;
+}
+
+.payment-method input[type="radio"]:checked + .method-content {
+    color: var(--primary-color);
+}
+
+.payment-method input[type="radio"]:checked ~ & {
+    border-color: var(--primary-color);
+    background: var(--light-bg);
+}
+
+.method-content {
+    text-align: center;
+}
+
+.method-name {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.method-desc {
+    font-size: 0.875rem;
+    color: var(--medium-text);
+}
+
+.payment-summary {
+    background: var(--light-bg);
+    padding: 1rem;
+    border-radius: var(--radius);
+    margin: 1.5rem 0;
+    text-align: center;
+}
+
+.payment-summary p {
+    margin: 0.25rem 0;
+}
+
+.payment-desc {
+    font-size: 0.875rem;
+    color: var(--medium-text);
+}
+
+.badge-paid { background: #d1fae5; color: #065f46; }
+.badge-unpaid { background: #fee2e2; color: #991b1b; }
+.badge-pending { background: #fef3c7; color: #92400e; }
+.badge-accepted { background: #d1fae5; color: #065f46; }
+.badge-absent { background: #fee2e2; color: #991b1b; }
+.badge-absent_with_apology { background: #fed7aa; color: #92400e; }
+.badge-attended { background: #d1fae5; color: #065f46; }
+.badge-excused { background: #fed7aa; color: #92400e; }
+
+@media (max-width: 768px) {
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .attendance-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.25rem;
+    }
+    
+    .attendance-row .label {
+        min-width: auto;
+    }
+    
+    .payment-methods {
+        flex-direction: column;
+    }
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentMethods = document.querySelectorAll('input[name="payment_mode"]');
+    const mpesaFields = document.getElementById('mpesaFields');
+    const cashFields = document.getElementById('cashFields');
+    
+    function togglePaymentFields() {
+        const selected = document.querySelector('input[name="payment_mode"]:checked');
+        if (selected.value === 'mpesa') {
+            mpesaFields.style.display = 'block';
+            cashFields.style.display = 'none';
+        } else {
+            mpesaFields.style.display = 'none';
+            cashFields.style.display = 'block';
+        }
+    }
+    
+    paymentMethods.forEach(radio => {
+        radio.addEventListener('change', togglePaymentFields);
+    });
+    
+    togglePaymentFields();
+});
+</script>
+{% endblock %}

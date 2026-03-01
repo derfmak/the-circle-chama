@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Respond to Meeting - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Respond to Meeting</h1>
+    <p>{{ meeting.title }} - {{ meeting.date|date:"F d, Y" }}</p>
+</section>
+
+<section class="content-section">
+    <div class="meeting-summary">
+        <div class="summary-item">
+            <span class="label">Date:</span>
+            <span class="value">{{ meeting.date|date:"l, F d, Y at H:i" }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="label">Venue:</span>
+            <span class="value">{{ meeting.venue }}</span>
+        </div>
+        <div class="summary-item">
+            <span class="label">Facilitation Fee:</span>
+            <span class="value">KES {{ meeting.facilitation_fee }}</span>
+        </div>
+    </div>
+    
+    <form method="post" class="response-form" id="responseForm">
+        {% csrf_token %}
+        
+        <div class="response-options">
+            <label class="response-option">
+                <input type="radio" name="response" value="accepted" required>
+                <div class="option-content">
+                    <span class="option-title">Accept</span>
+                    <span class="option-desc">I will attend and pay facilitation fee now</span>
+                </div>
+            </label>
+            
+            <label class="response-option">
+                <input type="radio" name="response" value="absent">
+                <div class="option-content">
+                    <span class="option-title">Absent</span>
+                    <span class="option-desc">I will not attend (debt will be recorded)</span>
+                </div>
+            </label>
+            
+            <label class="response-option">
+                <input type="radio" name="response" value="absent_with_apology">
+                <div class="option-content">
+                    <span class="option-title">Absent with Apology</span>
+                    <span class="option-desc">I cannot attend but will pay facilitation fee</span>
+                </div>
+            </label>
+        </div>
+        
+        <div class="apology-section" id="apologySection" style="display: none;">
+            <div class="form-group">
+                <label for="apology_reason">Reason for Absence</label>
+                <textarea name="apology_reason" id="apology_reason" class="form-control" rows="4" placeholder="Please explain why you cannot attend..."></textarea>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">Continue</button>
+            <a href="{% url 'meetings_list' %}" class="btn btn-link">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const form = document.getElementById('responseForm');
+const responseInputs = document.querySelectorAll('input[name="response"]');
+const apologySection = document.getElementById('apologySection');
+const apologyInput = document.getElementById('apology_reason');
+
+responseInputs.forEach(input => {
+    input.addEventListener('change', function() {
+        if (this.value === 'absent_with_apology') {
+            apologySection.style.display = 'block';
+            apologyInput.setAttribute('required', 'required');
+        } else {
+            apologySection.style.display = 'none';
+            apologyInput.removeAttribute('required');
+        }
+    });
+});
+
+form.addEventListener('submit', function(e) {
+    const selected = document.querySelector('input[name="response"]:checked');
+    if (!selected) {
+        e.preventDefault();
+        alert('Please select a response option.');
+        return;
+    }
+    
+    if (selected.value === 'absent') {
+        if (!confirm('You will be marked as absent and a debt of KES {{ meeting.facilitation_fee }} will be recorded. Continue?')) {
+            e.preventDefault();
+        }
+    }
+});
+</script>
+{% endblock %}

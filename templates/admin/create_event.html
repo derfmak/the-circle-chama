@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block title %}Create Event - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Create New Event</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_events' %}" class="btn btn-secondary">Back to Events</a>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="form-container" style="max-width: 600px; margin: 0 auto;">
+        <form method="post" class="styled-form">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div class="alert alert-error">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label for="{{ form.name.id_for_label }}">Event Name</label>
+                {{ form.name }}
+                {% if form.name.errors %}
+                    <span class="error-message">{{ form.name.errors.0 }}</span>
+                {% endif %}
+                <span class="form-hint">Default: Quarterly Kyathi Bidding/Applications</span>
+            </div>
+            
+            <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div class="form-group">
+                    <label for="{{ form.month.id_for_label }}">Month</label>
+                    {{ form.month }}
+                    {% if form.month.errors %}
+                        <span class="error-message">{{ form.month.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.year.id_for_label }}">Year</label>
+                    {{ form.year }}
+                    {% if form.year.errors %}
+                        <span class="error-message">{{ form.year.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.application_deadline.id_for_label }}">Application Deadline Date</label>
+                <input type="date" name="application_deadline" class="form-control" required>
+                {% if form.application_deadline.errors %}
+                    <span class="error-message">{{ form.application_deadline.errors.0 }}</span>
+                {% endif %}
+                <span class="form-hint">Deadline will be at 11:59 PM on this date</span>
+            </div>
+            
+            <div class="form-actions" style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary">Create Event</button>
+                <a href="{% url 'admin_events' %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>{% block title %}THE CIRCLE{% endblock %}</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-brand">
+            <a href="{% url 'home' %}">THE CIRCLE</a>
+        </div>
+        <div class="nav-toggle">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <ul class="nav-menu" id="navMenu">
+            {% if user.is_authenticated %}
+                {% if user.is_admin %}
+                    <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'admin_members_list' %}">Members</a></li>
+                    <li><a href="{% url 'admin_contributions' %}">Contributions</a></li>
+                    <li><a href="{% url 'admin_meetings' %}">Meetings</a></li>
+                    <li><a href="{% url 'admin_events' %}">Events</a></li>
+                    <li><a href="{% url 'admin_announcements' %}">Announcements</a></li>
+                    <li><a href="{% url 'admin_messages' %}">Messages</a></li>
+                {% else %}
+                    <li><a href="{% url 'member_dashboard' %}">Dashboard</a></li>
+                    <li><a href="{% url 'contributions' %}">Contributions</a></li>
+                    <li><a href="{% url 'meetings_list' %}">Meetings</a></li>
+                    <li><a href="{% url 'events_list' %}">Events</a></li>
+                    <li><a href="{% url 'announcements_list' %}">Announcements</a></li>
+                    <li><a href="{% url 'profile' %}">Profile</a></li>
+                {% endif %}
+                <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
+            {% else %}
+                <li><a href="{% url 'home' %}">Home</a></li>
+                <li><a href="{% url 'about' %}">About</a></li>
+                <li><a href="{% url 'contact' %}">Contact</a></li>
+                <li><a href="{% url 'login' %}" class="btn-login">Member Login</a></li>
+                <li><a href="{% url 'admin_login' %}" class="btn-admin">Admin</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+    <main class="main-content">
+        {% if messages %}
+            <div class="messages">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+        
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="footer">
+        <p>&copy; {% now "Y" %} THE CIRCLE Chama. All rights reserved.</p>
+    </footer>
+
+    <script src="{% static 'js/main.js' %}"></script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-menu a');
+    
+    navLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        
+        if (href === currentPath || 
+            (currentPath.startsWith(href) && href !== '/' && href !== '')) {
+            link.classList.add('active');
+        }
+        
+        if (href === '/' && currentPath === '/') {
+            link.classList.add('active');
+        }
+    });
+});
+</script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

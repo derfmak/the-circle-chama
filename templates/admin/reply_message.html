@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Reply to {{ contact.name }} - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Reply to {{ contact.name }}</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_message_detail' contact.id %}" class="btn btn-secondary">Back to Message</a>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="form-container" style="max-width: 800px; margin: 0 auto;">
+        <div class="original-message" style="background: var(--light-bg); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 2rem;">
+            <h3>Original Message</h3>
+            <p><strong>From:</strong> {{ contact.name }} ({{ contact.email }})</p>
+            <p><strong>Received:</strong> {{ contact.created_at|date:"F d, Y H:i" }}</p>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                {{ contact.message|linebreaks }}
+            </div>
+        </div>
+        
+        <form method="post" class="styled-form">
+            {% csrf_token %}
+            
+            <div class="form-group">
+                <label for="subject">Subject *</label>
+                <input type="text" id="subject" name="subject" class="form-control" 
+                       value="Re: {{ contact.subject|default:'Your inquiry' }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="body">Message *</label>
+                <textarea id="body" name="body" rows="8" class="form-control" required
+                          placeholder="Type your reply here..."></textarea>
+                <small class="form-hint">This will be sent to {{ contact.email }}</small>
+            </div>
+            
+            <div class="form-actions" style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn btn-primary">Send Reply</button>
+                <a href="{% url 'admin_message_detail' contact.id %}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}

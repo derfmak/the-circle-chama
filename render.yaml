@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: the-circle-chama
+    runtime: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application"
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.0
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: the-circle-db
+          property: connectionString
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: the-circle-redis
+          property: connectionString
+  - type: redis
+    name: the-circle-redis
+    plan: free
+    ipAllowList: []
+
+databases:
+  - name: the-circle-db
+    databaseName: the_circle
+    user: the_circle

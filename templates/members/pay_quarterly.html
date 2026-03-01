@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+
+{% block title %}Pay Quarterly - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Pay Quarterly Contribution</h1>
+    <p>Quarter {{ quarter }} Payment</p>
+</section>
+
+<section class="content-section">
+    <div class="payment-card">
+        <div class="payment-details">
+            <div class="detail-row">
+                <span class="detail-label">Quarter:</span>
+                <span class="detail-value">Quarter {{ quarter }}</span>
+            </div>
+            <div class="detail-row">
+                <span class="detail-label">Amount:</span>
+                <span class="detail-value amount-highlight">KES {{ amount }}</span>
+            </div>
+        </div>
+        
+        <form method="post" class="payment-form">
+            {% csrf_token %}
+            
+            <div class="payment-methods">
+                <label class="payment-method">
+                    <input type="radio" name="payment_mode" value="mpesa" checked>
+                    <div class="method-content">
+                        <span class="method-name">M-Pesa</span>
+                        <span class="method-desc">Instant payment via STK Push</span>
+                    </div>
+                </label>
+                
+                <label class="payment-method">
+                    <input type="radio" name="payment_mode" value="cash">
+                    <div class="method-content">
+                        <span class="method-name">Cash</span>
+                        <span class="method-desc">Cash payment to admin</span>
+                    </div>
+                </label>
+            </div>
+            
+            <div class="mpesa-fields" id="mpesaFields">
+                <div class="form-group">
+                    <label for="{{ form.mpesa_phone.id_for_label }}">M-Pesa Phone Number</label>
+                    {{ form.mpesa_phone }}
+                    <small class="form-hint">Format: 2547XXXXXXXX</small>
+                    {% if form.mpesa_phone.errors %}
+                        <span class="error-message">{{ form.mpesa_phone.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">Pay KES {{ amount }}</button>
+                <a href="{% url 'quarterly_contributions' %}" class="btn btn-link">Cancel</a>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.querySelectorAll('input[name="payment_mode"]').forEach(input => {
+    input.addEventListener('change', function() {
+        const mpesaFields = document.getElementById('mpesaFields');
+        mpesaFields.style.display = this.value === 'mpesa' ? 'block' : 'none';
+    });
+});
+</script>
+{% endblock %}

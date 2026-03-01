@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+
+{% block title %}Member Attendance - {{ member.get_full_name }} - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Member Attendance: {{ member.get_full_name }}</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_members_list' %}" class="btn btn-secondary">Back to Members</a>
+        <a href="{% url 'admin_attendance_report' %}" class="btn btn-info">View Report</a>
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-icon meetings"></div>
+            <div class="stat-content">
+                <h3>Total Meetings</h3>
+                <p class="stat-value">{{ total_meetings }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon accepted"></div>
+            <div class="stat-content">
+                <h3>Attended</h3>
+                <p class="stat-value">{{ attended }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon absent"></div>
+            <div class="stat-content">
+                <h3>Absent</h3>
+                <p class="stat-value">{{ absent }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon apology"></div>
+            <div class="stat-content">
+                <h3>Apologies</h3>
+                <p class="stat-value">{{ apology }}</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon rate"></div>
+            <div class="stat-content">
+                <h3>Attendance Rate</h3>
+                <p class="stat-value">{{ attendance_rate }}%</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="table-responsive">
+        <table class="data-table admin-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Meeting</th>
+                    <th>Response</th>
+                    <th>Apology Reason</th>
+                    <th>Actual Attendance</th>
+                    <th>Payment Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance in attendances %}
+                <tr>
+                    <td>{{ attendance.meeting.date|date:"M d, Y" }}</td>
+                    <td>{{ attendance.meeting.title }}</td>
+                    <td>
+                        <span class="badge badge-{{ attendance.status }}">
+                            {{ attendance.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ attendance.apology_reason|default:"-" }}</td>
+                    <td>
+                        <span class="badge badge-{{ attendance.actual_attendance }}">
+                            {{ attendance.get_actual_attendance_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge badge-{{ attendance.payment_status }}">
+                            {{ attendance.get_payment_status_display }}
+                        </span>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="empty-cell">No attendance records found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<style>
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+}
+
+.stat-card {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 1.5rem;
+    box-shadow: var(--shadow);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    border: 1px solid var(--border-color);
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--radius);
+    background: var(--light-bg);
+}
+
+.stat-icon.meetings { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+.stat-icon.accepted { background: linear-gradient(135deg, #10b981, #059669); }
+.stat-icon.absent { background: linear-gradient(135deg, #ef4444, #dc2626); }
+.stat-icon.apology { background: linear-gradient(135deg, #f59e0b, #d97706); }
+.stat-icon.rate { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
+
+.stat-content h3 {
+    font-size: 0.875rem;
+    color: var(--medium-text);
+    margin-bottom: 0.25rem;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--dark-text);
+    margin: 0;
+}
+
+.badge-accepted { background: #d1fae5; color: #065f46; }
+.badge-absent { background: #fee2e2; color: #991b1b; }
+.badge-absent_with_apology { background: #fed7aa; color: #92400e; }
+.badge-pending { background: #e5e7eb; color: #374151; }
+.badge-attended { background: #d1fae5; color: #065f46; }
+.badge-excused { background: #fed7aa; color: #92400e; }
+
+.empty-cell {
+    text-align: center;
+    padding: 3rem !important;
+    color: var(--light-text);
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

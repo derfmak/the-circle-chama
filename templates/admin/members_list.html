@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Members - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Manage Members</h1>
+    <a href="{% url 'admin_create_member' %}" class="btn btn-primary">Add New Member</a>
+</section>
+
+<section class="content-section">
+    {% if members %}
+        <div class="table-responsive">
+            <table class="data-table admin-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>ID Number</th>
+                        <th>Joined</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in members %}
+                        <tr class="{% if not member.is_active %}inactive{% endif %} {% if member.memberprofile.is_dropped %}dropped{% endif %}">
+                            <td>{{ member.get_full_name }}</td>
+                            <td>{{ member.email }}</td>
+                            <td>{{ member.phone_number }}</td>
+                            <td>{{ member.id_number }}</td>
+                            <td>{{ member.date_joined|date:"M d, Y" }}</td>
+                            <td>
+                                {% if not member.is_active %}
+                                    <span class="badge badge-inactive">Inactive</span>
+                                {% elif member.memberprofile.is_dropped %}
+                                    <span class="badge badge-dropped">Dropped</span>
+                                {% else %}
+                                    <span class="badge badge-active">Active</span>
+                                {% endif %}
+                            </td>
+                            <td class="actions">
+                                <a href="{% url 'admin_edit_member' member.id %}" class="btn btn-sm btn-secondary">Edit</a>
+                                <a href="{% url 'admin_delete_member' member.id %}" class="btn btn-sm btn-danger">Drop</a>
+                                <a href="{% url 'admin_member_attendance' member.id %}" class="btn btn-sm btn-info">Attendance</a>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">Previous</a>
+                {% endif %}
+                
+                <span class="page-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No members found.</p>
+    {% endif %}
+</section>
+{% endblock %}

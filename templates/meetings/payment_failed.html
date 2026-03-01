@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Failed - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="payment-status-page">
+    <div class="status-container">
+        <div class="status-icon failed">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </div>
+        
+        <h1>Payment Failed</h1>
+        <p class="status-message">
+            We were unable to process your facilitation fee. A debt has been recorded.
+        </p>
+        
+        <div class="transaction-details failed">
+            <div class="detail">
+                <span class="label">Meeting:</span>
+                <span class="value">{{ payment.attendance.meeting.title }}</span>
+            </div>
+            <div class="detail">
+                <span class="label">Amount:</span>
+                <span class="value">KES {{ payment.amount }}</span>
+            </div>
+        </div>
+        
+        <div class="alert alert-warning">
+            <strong>Important:</strong> You have been marked as having a debt for this meeting. 
+            Please clear this debt as soon as possible.
+        </div>
+        
+        <div class="status-actions">
+            <a href="{% url 'pay_facilitation' payment.attendance.id %}" class="btn btn-primary">
+                Try Again
+            </a>
+            <a href="{% url 'meetings_list' %}" class="btn btn-secondary">
+                Back to Meetings
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

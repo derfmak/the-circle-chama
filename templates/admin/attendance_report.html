@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Attendance Report - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Attendance Report</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_meetings' %}" class="btn btn-secondary">Back to Meetings</a>
+        <button onclick="window.print()" class="btn btn-primary">Print Report</button>
+    </div>
+</section>
+
+{% if attendance_stats %}
+    <div class="stats-grid" style="margin-bottom: 2rem;">
+        <div class="stat-card">
+            <div class="stat-icon meetings"></div>
+            <div class="stat-content">
+                <h3>Total Meetings</h3>
+                <p class="stat-value">{{ attendance_stats|length }}</p>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon accepted"></div>
+            <div class="stat-content">
+                <h3>Average Attendance</h3>
+                <p class="stat-value">
+                    {% with total=0 %}
+                        {% for stat in attendance_stats %}
+                            {% with total=total|add:stat.accepted %}{% endwith %}
+                        {% endfor %}
+                        {% if attendance_stats %}
+                            {{ total|divisibleby:attendance_stats|length|floatformat:1 }}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    {% endwith %}
+                </p>
+            </div>
+        </div>
+    </div>
+
+    {% for stat in attendance_stats %}
+    <div class="dashboard-card" style="margin-bottom: 2rem;">
+        <div class="page-header" style="margin-bottom: 1rem;">
+            <h2>{{ stat.meeting.title }}</h2>
+            <p>{{ stat.meeting.date|date:"F j, Y - g:i A" }}</p>
+        </div>
+        
+        <div class="stats-grid" style="margin-bottom: 1.5rem;">
+            <div class="stat-card">
+                <div class="stat-icon meetings"></div>
+                <div class="stat-content">
+                    <h3>Total Members</h3>
+                    <p class="stat-value">{{ stat.total }}</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon accepted"></div>
+                <div class="stat-content">
+                    <h3>Attended</h3>
+                    <p class="stat-value">{{ stat.accepted }}</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon absent"></div>
+                <div class="stat-content">
+                    <h3>Absent</h3>
+                    <p class="stat-value">{{ stat.absent }}</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon apology"></div>
+                <div class="stat-content">
+                    <h3>Apology</h3>
+                    <p class="stat-value">{{ stat.apology }}</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon paid"></div>
+                <div class="stat-content">
+                    <h3>Paid</h3>
+                    <p class="stat-value">{{ stat.paid }}</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon unpaid"></div>
+                <div class="stat-content">
+                    <h3>Unpaid</h3>
+                    <p class="stat-value">{{ stat.unpaid }}</p>
+                </div>
+            </div>
+        </div>
+        
+        <div style="text-align: right;">
+            <a href="{% url 'admin_meeting_detail' stat.meeting.id %}" class="btn btn-sm btn-primary">View Details</a>
+        </div>
+    </div>
+    {% endfor %}
+{% else %}
+    <div class="alert alert-info">
+        No completed meetings found.
+    </div>
+{% endif %}
+{% endblock %}

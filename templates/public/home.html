@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Welcome to THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="hero-content">
+        <h1>Welcome to THE CIRCLE</h1>
+        <p class="hero-text">Building wealth together through unity, discipline, and mutual support.</p>
+        <div class="hero-actions">
+            <a href="{% url 'login' %}" class="btn btn-primary">Member Login</a>
+            <a href="{% url 'about' %}" class="btn btn-secondary">Learn More</a>
+        </div>
+    </div>
+</section>
+
+<section class="features">
+    <div class="container">
+        <h2>Our Core Values</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h3>Unity</h3>
+                <p>Together we stand, divided we fall. Our strength lies in our collective effort.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Transparency</h3>
+                <p>Every contribution, every expense, fully documented and accessible to members.</p>
+            </div>
+            <div class="feature-card">
+                <h3>Growth</h3>
+                <p>Building financial security through disciplined monthly contributions.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="cta">
+    <div class="container">
+        <h2>Join Our Community</h2>
+        <p>Contact us to learn more about membership requirements and benefits.</p>
+        <a href="{% url 'contact' %}" class="btn btn-primary">Contact Us</a>
+    </div>
+</section>
+{% endblock %}

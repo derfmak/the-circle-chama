@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Processing - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="payment-status-page">
+    <div class="status-container">
+        <div class="status-icon pending">
+            <div class="spinner"></div>
+        </div>
+        
+        <h1>Processing Payment</h1>
+        <p class="status-message">Please check your phone and enter M-Pesa PIN to complete the transaction.</p>
+        
+        <div class="transaction-details">
+            <div class="detail">
+                <span class="label">Amount:</span>
+                <span class="value">KES {{ transaction.amount }}</span>
+            </div>
+            <div class="detail">
+                <span class="label">Phone:</span>
+                <span class="value">{{ transaction.mpesa_phone }}</span>
+            </div>
+            <div class="detail">
+                <span class="label">Transaction ID:</span>
+                <span class="value">{{ transaction.idempotency_key|slice:":8" }}...</span>
+            </div>
+        </div>
+        
+        <div class="status-timer">
+            <p>Checking status in <span id="countdown">30</span> seconds...</p>
+        </div>
+        
+        <div class="status-actions">
+            <a href="{% url 'check_payment_status' transaction.id %}" class="btn btn-secondary" id="checkStatus">
+                Check Status Now
+            </a>
+            <a href="{% url 'contributions' %}" class="btn btn-link">
+                Back to Contributions
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let countdown = 30;
+const countdownEl = document.getElementById('countdown');
+const checkBtn = document.getElementById('checkStatus');
+
+function updateCountdown() {
+    countdown--;
+    countdownEl.textContent = countdown;
+    
+    if (countdown <= 0) {
+        checkStatus();
+    }
+}
+
+function checkStatus() {
+    fetch('{% url "check_payment_status" transaction.id %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'completed') {
+                window.location.href = '{% url "payment_success" transaction.id %}';
+            } else if (data.status === 'failed') {
+                window.location.href = '{% url "payment_failed" transaction.id %}';
+            } else {
+                countdown = 30;
+            }
+        });
+}
+
+setInterval(updateCountdown, 1000);
+
+checkBtn.addEventListener('click', function(e) {
+    e.preventDefault();
+    checkStatus();
+});
+</script>
+{% endblock %}

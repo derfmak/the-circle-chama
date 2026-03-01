@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete Announcement - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Delete Announcement</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_announcements' %}" class="btn btn-secondary">Back to Announcements</a>
+    </div>
+</section>
+
+<div class="dashboard-card">
+    <div class="alert alert-warning" style="margin-bottom: 2rem;">
+        <strong>Warning:</strong> This action cannot be undone.
+    </div>
+    
+    <p style="margin-bottom: 2rem; font-size: 1.1rem;">
+        Are you sure you want to delete the announcement "<strong>{{ announcement.title }}</strong>"?
+    </p>
+    
+    <div style="background: var(--light-bg); padding: 1.5rem; border-radius: var(--radius); margin-bottom: 2rem;">
+        <h3 style="margin-bottom: 1rem;">{{ announcement.title }}</h3>
+        <p style="color: var(--medium-text);">{{ announcement.content|linebreaks }}</p>
+        <p style="margin-top: 1rem; font-size: 0.9rem; color: var(--light-text);">
+            Created: {{ announcement.created_at|date:"M d, Y" }}
+        </p>
+    </div>
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-actions">
+            <button type="submit" class="btn btn-danger">Yes, Delete Announcement</button>
+            <a href="{% url 'admin_announcements' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

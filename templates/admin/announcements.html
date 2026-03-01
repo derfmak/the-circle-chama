@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Announcements - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Manage Announcements</h1>
+    <a href="{% url 'admin_create_announcement' %}" class="btn btn-primary">New Announcement</a>
+</section>
+
+<section class="content-section">
+    {% if announcements %}
+        <div class="announcements-admin-list">
+            {% for announcement in announcements %}
+                <div class="announcement-admin-card {% if not announcement.is_active %}inactive{% endif %} {% if announcement.is_edited %}edited{% endif %}">
+                    <div class="announcement-content-block">
+                        <h3>
+                            {{ announcement.title }}
+                            {% if announcement.is_edited %}
+                                <span class="edited-tag">Edited</span>
+                            {% endif %}
+                            {% if not announcement.is_active %}
+                                <span class="inactive-tag">Deleted</span>
+                            {% endif %}
+                        </h3>
+                        <p class="announcement-meta">
+                            By {{ announcement.created_by.get_full_name|default:"Admin" }} | 
+                            {{ announcement.created_at|date:"F d, Y H:i" }}
+                        </p>
+                        <p class="announcement-preview">{{ announcement.content|truncatewords:20 }}</p>
+                    </div>
+                    
+                    <div class="announcement-actions-block">
+                        {% if announcement.is_active %}
+                            <a href="{% url 'admin_edit_announcement' announcement.id %}" class="btn btn-sm btn-secondary">Edit</a>
+                            <a href="{% url 'admin_delete_announcement' announcement.id %}" class="btn btn-sm btn-danger">Deactivate</a>
+                        {% else %}
+                            <span class="inactive-message">No actions available</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">Previous</a>
+                {% endif %}
+                <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No announcements found.</p>
+    {% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Events - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Manage Events</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_create_event' %}" class="btn btn-primary">Create Event</a>
+        <a href="{% url 'admin_event_winners' %}" class="btn btn-secondary">View Winners</a>
+    </div>
+</section>
+
+<section class="content-section">
+    {% if events %}
+        <div class="events-admin-list">
+            {% for event in events %}
+                <div class="event-admin-card {% if event.is_completed %}completed{% endif %}">
+                    <div class="event-month-badge">
+                        {{ event.get_month_display }}
+                    </div>
+                    
+                    <div class="event-info-block">
+                        <h3>{{ event.name }}</h3>
+                        <p class="event-date">{{ event.date|date:"F d, Y" }} | {{ event.venue }}</p>
+                        <p class="event-desc">{{ event.description|truncatewords:15 }}</p>
+                        
+                        <div class="event-stats">
+                            <span class="stat">
+                                <strong>{{ event.applications.count }}</strong> Applications
+                            </span>
+                            {% if event.is_completed %}
+                                <span class="stat winner">
+                                    Winner: {{ event.winner.get_full_name|default:"None" }}
+                                </span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <div class="event-status-block">
+                        {% if event.is_completed %}
+                            <span class="badge badge-completed">Completed</span>
+                        {% else %}
+                            <span class="badge badge-pending">Open</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="event-actions-block">
+                        <a href="{% url 'admin_event_applications' event.id %}" class="btn btn-sm btn-primary">
+                            {% if event.is_completed %}View{% else %}Review{% endif %} Applications
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-sm">Previous</a>
+                {% endif %}
+                <span class="page-info">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No events found.</p>
+    {% endif %}
+</section>
+{% endblock %}

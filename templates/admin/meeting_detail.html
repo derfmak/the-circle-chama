@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ meeting.title }} - Admin - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>{{ meeting.title }}</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_edit_meeting' meeting.id %}" class="btn btn-secondary">Edit</a>
+        {% if meeting.status == 'scheduled' and meeting.date < now %}
+            <a href="{% url 'admin_add_summary' meeting.id %}" class="btn btn-primary">Complete & Add Summary</a>
+        {% endif %}
+    </div>
+</section>
+
+<section class="content-section">
+    <div class="meeting-detail-card">
+        <div class="detail-grid">
+            <div class="detail-item">
+                <span class="label">Date & Time</span>
+                <span class="value">{{ meeting.date|date:"l, F d, Y at H:i" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Venue</span>
+                <span class="value">{{ meeting.venue }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Facilitation Fee</span>
+                <span class="value">KES {{ meeting.facilitation_fee }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">M-Pesa Number</span>
+                <span class="value">{{ meeting.mpesa_number }}</span>
+            </div>
+        </div>
+        
+        <div class="detail-block">
+            <span class="label">Purpose</span>
+            <p class="value">{{ meeting.purpose }}</p>
+        </div>
+        
+        {% if meeting.summary %}
+            <div class="detail-block highlight">
+                <span class="label">Meeting Summary</span>
+                <p class="value">{{ meeting.summary }}</p>
+            </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="content-section">
+    <h2>Attendance ({{ attendances.count }} Total)</h2>
+    
+    <div class="attendance-stats-bar">
+        <div class="stat-item accepted">
+            <span class="count">{{ accepted_count }}</span>
+            <span class="label">Accepted</span>
+        </div>
+        <div class="stat-item absent">
+            <span class="count">{{ absent_count }}</span>
+            <span class="label">Absent</span>
+        </div>
+        <div class="stat-item apology">
+            <span class="count">{{ apology_count }}</span>
+            <span class="label">With Apology</span>
+        </div>
+        <div class="stat-item pending">
+            <span class="count">{{ pending_count }}</span>
+            <span class="label">No Response</span>
+        </div>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Member</th>
+                    <th>Response</th>
+                    <th>Apology Reason</th>
+                    <th>Payment Status</th>
+                    <th>Amount Paid</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for attendance in attendances %}
+                    <tr>
+                        <td>{{ attendance.member.get_full_name }}</td>
+                        <td>
+                            <span class="badge badge-{{ attendance.status }}">
+                                {{ attendance.get_status_display }}
+                            </span>
+                        </td>
+                        <td>{{ attendance.apology_reason|default:"-" }}</td>
+                        <td>
+                            <span class="badge badge-{{ attendance.payment_status }}">
+                                {{ attendance.get_payment_status_display }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if attendance.facilitation_paid > 0 %}
+                                KES {{ attendance.facilitation_paid }}
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="empty-cell">No responses yet.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endblock %}

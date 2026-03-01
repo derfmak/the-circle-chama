@@ -1,0 +1,326 @@
+{% extends 'base.html' %}
+
+{% block title %}Manage Contributions - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Manage Contributions</h1>
+    <div class="header-actions">
+        <a href="{% url 'admin_create_contribution_type' %}" class="btn btn-secondary">Add Type</a>
+        <a href="{% url 'admin_payment_approval' %}" class="btn btn-secondary">Approvals</a>
+        <a href="{% url 'admin_contribution_report' %}" class="btn btn-info">Reports</a>
+    </div>
+</section>
+
+<section class="filter-section">
+    <form method="get" class="filter-form">
+        <div class="filter-group">
+            <select name="type" class="form-control">
+                <option value="">All Types</option>
+                {% for type in contribution_types %}
+                    <option value="{{ type.id }}" {% if selected_type == type.id|stringformat:"i" %}selected{% endif %}>
+                        {{ type.name }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="filter-group">
+            <select name="status" class="form-control">
+                <option value="">All Status</option>
+                <option value="pending" {% if status == 'pending' %}selected{% endif %}>Pending</option>
+                <option value="paid" {% if status == 'paid' %}selected{% endif %}>Paid</option>
+                <option value="paid_late" {% if status == 'paid_late' %}selected{% endif %}>Paid Late</option>
+                <option value="partial" {% if status == 'partial' %}selected{% endif %}>Partial</option>
+                <option value="waiting_approval" {% if status == 'waiting_approval' %}selected{% endif %}>Waiting Approval</option>
+                <option value="rejected" {% if status == 'rejected' %}selected{% endif %}>Rejected</option>
+            </select>
+        </div>
+        <div class="filter-group">
+            <input type="text" name="search" class="form-control" placeholder="Search member..." value="{{ search }}">
+        </div>
+        <button type="submit" class="btn btn-secondary">Filter</button>
+        <a href="{% url 'admin_contributions' %}" class="btn btn-link">Clear</a>
+    </form>
+</section>
+
+<section class="content-section">
+    {% if contributions %}
+        <div class="table-responsive">
+            <table class="data-table admin-table">
+                <thead>
+                    <tr>
+                        <th>Member</th>
+                        <th>Type</th>
+                        <th>Period</th>
+                        <th>Due</th>
+                        <th>Fine</th>
+                        <th>Paid</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for contribution in contributions %}
+                        <tr class="
+                            {% if contribution.is_late and contribution.contribution_type.contribution_type == 'monthly' %}late{% endif %}
+                            {% if contribution.status == 'waiting_approval' %}waiting-row{% endif %}
+                            {% if contribution.status == 'rejected' %}rejected-row{% endif %}
+                        ">
+                            <td>{{ contribution.user.get_full_name }}</td>
+                            <td>{{ contribution.contribution_type.name }}</td>
+                            <td>
+                                {% if contribution.contribution_type.contribution_type == 'monthly' and contribution.month %}
+                                    {{ contribution.month_name }} {{ contribution.year }}
+                                {% elif contribution.contribution_type.contribution_type == 'quarterly' and contribution.quarter %}
+                                    Quarter {{ contribution.quarter }} {{ contribution.year }}
+                                {% else %}
+                                    {{ contribution.year }}
+                                {% endif %}
+                            </td>
+                            <td>KES {{ contribution.amount_due|floatformat:2 }}</td>
+                            <td>
+                                {% if contribution.fine_amount > 0 %}
+                                    <span class="text-danger">KES {{ contribution.fine_amount|floatformat:2 }}</span>
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </td>
+                            <td>KES {{ contribution.amount_paid|floatformat:2 }}</td>
+                            <td>
+                                <span class="badge badge-{{ contribution.status }}">
+                                    {% if contribution.status == 'paid' %}
+                                        Paid
+                                    {% elif contribution.status == 'paid_late' %}
+                                        Paid Late
+                                    {% elif contribution.status == 'pending' %}
+                                        Pending
+                                    {% elif contribution.status == 'partial' %}
+                                        Partial
+                                    {% elif contribution.status == 'waiting_approval' %}
+                                        Waiting Approval
+                                    {% elif contribution.status == 'rejected' %}
+                                        Rejected
+                                    {% endif %}
+                                </span>
+                            </td>
+                            <td class="actions">
+                                <a href="{% url 'admin_edit_contribution' contribution.id %}" class="btn btn-sm btn-secondary">Edit</a>
+                                {% if contribution.status == 'waiting_approval' %}
+                                    <a href="{% url 'admin_review_cash_request' contribution.id %}" class="btn btn-sm btn-warning">Review</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page={{ page_obj.previous_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="btn btn-sm">Previous</a>
+                {% endif %}
+                
+                <span class="page-info">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% if selected_type %}&type={{ selected_type }}{% endif %}{% if status %}&status={{ status }}{% endif %}{% if search %}&search={{ search }}{% endif %}" class="btn btn-sm">Next</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <p class="empty-state">No contributions found.</p>
+    {% endif %}
+</section>
+
+<style>
+.header-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.header-actions .btn {
+    transition: all 0.3s ease;
+}
+
+.header-actions .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+}
+
+.header-actions .btn-secondary:hover {
+    background: var(--primary-color);
+    color: var(--white);
+}
+
+.header-actions .btn-info:hover {
+    background: var(--info-color);
+    filter: brightness(1.1);
+}
+
+.filter-section {
+    background: var(--white);
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    margin-bottom: 2rem;
+    box-shadow: var(--shadow);
+}
+
+.filter-form {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 150px;
+}
+
+.data-table.admin-table th {
+    background: var(--primary-color);
+    color: var(--white);
+    font-weight: 600;
+}
+
+.data-table.admin-table tr:hover {
+    background: rgba(26, 95, 122, 0.05);
+}
+
+.data-table.admin-table tr.late {
+    background: rgba(198, 40, 40, 0.05);
+}
+
+.data-table.admin-table tr.late:hover {
+    background: rgba(198, 40, 40, 0.1);
+}
+
+.data-table.admin-table tr.waiting-row {
+    background: rgba(245, 158, 11, 0.05);
+}
+
+.data-table.admin-table tr.waiting-row:hover {
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.data-table.admin-table tr.rejected-row {
+    background: rgba(239, 68, 68, 0.05);
+}
+
+.data-table.admin-table tr.rejected-row:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.actions .btn {
+    opacity: 0.8;
+    transition: all 0.3s ease;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+}
+
+.actions .btn:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+}
+
+.badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.badge-pending {
+    background: #fff3e0;
+    color: #ef6c00;
+}
+
+.badge-paid {
+    background: #e8f5e9;
+    color: #2e7d32;
+}
+
+.badge-paid_late {
+    background: #ffebee;
+    color: #c62828;
+}
+
+.badge-partial {
+    background: #e3f2fd;
+    color: #1565c0;
+}
+
+.badge-waiting_approval {
+    background: #fff3e0;
+    color: #ef6c00;
+    border: 1px dashed #ef6c00;
+}
+
+.badge-rejected {
+    background: #ffebee;
+    color: #c62828;
+    border: 1px solid #c62828;
+}
+
+.text-danger {
+    color: #c62828;
+    font-weight: 500;
+}
+
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.page-info {
+    font-size: 0.875rem;
+    color: var(--medium-text);
+}
+
+.empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--light-text);
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .filter-form {
+        flex-direction: column;
+    }
+    
+    .filter-group {
+        width: 100%;
+    }
+    
+    .header-actions {
+        justify-content: center;
+    }
+    
+    .actions {
+        flex-direction: column;
+    }
+    
+    .actions .btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+</style>
+{% endblock %}

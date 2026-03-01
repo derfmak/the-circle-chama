@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+
+{% block title %}Payment Successful - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="payment-status-page">
+    <div class="status-container">
+        <div class="status-icon success">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        
+        <h1>Payment Successful</h1>
+        <p class="status-message">Your payment has been processed successfully.</p>
+        
+        <div class="transaction-details success">
+            <div class="detail">
+                <span class="label">Amount Paid:</span>
+                <span class="value">KES {{ transaction.amount }}</span>
+            </div>
+            <div class="detail">
+                <span class="label">Receipt Number:</span>
+                <span class="value">{{ transaction.mpesa_receipt|default:"Pending" }}</span>
+            </div>
+            <div class="detail">
+                <span class="label">Date:</span>
+                <span class="value">{{ transaction.created_at|date:"M d, Y H:i" }}</span>
+            </div>
+        </div>
+        
+        <div class="status-actions">
+            <a href="{% url 'contributions' %}" class="btn btn-primary">
+                View Contributions
+            </a>
+            <a href="{% url 'member_dashboard' %}" class="btn btn-secondary">
+                Dashboard
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

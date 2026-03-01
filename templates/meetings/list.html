@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Meetings - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Meetings</h1>
+    <p>View upcoming meetings and your attendance history</p>
+</section>
+
+<section class="meetings-section">
+    <h2>Upcoming Meetings</h2>
+    
+    {% if upcoming_meetings %}
+        <div class="meetings-list">
+            {% for item in upcoming_meetings %}
+                <div class="meeting-card upcoming">
+                    <div class="meeting-date">
+                        <span class="day">{{ item.meeting.date|date:"d" }}</span>
+                        <span class="month">{{ item.meeting.date|date:"M" }}</span>
+                    </div>
+                    
+                    <div class="meeting-info">
+                        <h3>{{ item.meeting.title }}</h3>
+                        <p class="meeting-venue">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                            {{ item.meeting.venue }}
+                        </p>
+                        <p class="meeting-time">{{ item.meeting.date|date:"l, F d, Y at H:i" }}</p>
+                        <p class="meeting-purpose">{{ item.meeting.purpose|truncatewords:20 }}</p>
+                        
+                        {% if item.attendance %}
+                            <div class="attendance-status">
+                                <span class="badge badge-{{ item.attendance.status }}">
+                                    {{ item.attendance.get_status_display }}
+                                </span>
+                                {% if item.attendance.payment_status == 'paid' %}
+                                    <span class="badge badge-paid">Facilitation Paid</span>
+                                {% elif item.attendance.payment_status == 'unpaid' %}
+                                    <span class="badge badge-debt">Debt Recorded</span>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="meeting-actions">
+                        {% if item.can_respond %}
+                            <a href="{% url 'respond_meeting' item.meeting.id %}" class="btn btn-primary">
+                                Respond
+                            </a>
+                        {% else %}
+                            <span class="responded-text">Response Recorded</span>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No upcoming meetings scheduled.</p>
+    {% endif %}
+</section>
+
+<section class="meetings-section">
+    <h2>Past Meetings</h2>
+    
+    {% if past_meetings %}
+        <div class="meetings-list past">
+            {% for item in past_meetings %}
+                <div class="meeting-card past">
+                    <div class="meeting-date">
+                        <span class="day">{{ item.meeting.date|date:"d" }}</span>
+                        <span class="month">{{ item.meeting.date|date:"M" }}</span>
+                    </div>
+                    
+                    <div class="meeting-info">
+                        <h3>{{ item.meeting.title }}</h3>
+                        <p class="meeting-venue">{{ item.meeting.venue }}</p>
+                        <p class="meeting-time">{{ item.meeting.date|date:"F d, Y" }}</p>
+                        
+                        {% if item.attendance %}
+                            <div class="attendance-status">
+                                <span class="badge badge-{{ item.attendance.status }}">
+                                    {{ item.attendance.get_status_display }}
+                                </span>
+                                {% if item.has_summary %}
+                                    <span class="badge badge-info">Summary Available</span>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span class="badge badge-absent">No Response</span>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="meeting-actions">
+                        <a href="{% url 'meeting_detail' item.meeting.id %}" class="btn btn-secondary btn-sm">
+                            View Details
+                        </a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No past meetings found.</p>
+    {% endif %}
+</section>
+{% endblock %}

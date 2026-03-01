@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+
+{% block title %}Apply for Event - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Apply for Event Support</h1>
+    <p>{{ event.name }} - {{ month_name }} {{ event.year }}</p>
+</section>
+
+<section class="content-section">
+    <div class="event-info-card">
+        <div class="info-row">
+            <span class="label">Event Date:</span>
+            <span class="value">{{ event.date|date:"F d, Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="label">Venue:</span>
+            <span class="value">{{ event.venue }}</span>
+        </div>
+    </div>
+    
+    <form method="post" class="application-form">
+        {% csrf_token %}
+        
+        <div class="form-section">
+            <h3>Applicant Information</h3>
+            
+            <div class="form-group">
+                <label for="{{ form.applicant_name.id_for_label }}">Full Name</label>
+                {{ form.applicant_name }}
+                {% if form.applicant_name.errors %}
+                    <span class="error-message">{{ form.applicant_name.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-group">
+                <label for="{{ form.id_number.id_for_label }}">ID Number</label>
+                {{ form.id_number }}
+                {% if form.id_number.errors %}
+                    <span class="error-message">{{ form.id_number.errors.0 }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3>Event Details</h3>
+            
+            <div class="form-group">
+                <label for="{{ form.event_name.id_for_label }}">Event Name</label>
+                {{ form.event_name }}
+                {% if form.event_name.errors %}
+                    <span class="error-message">{{ form.event_name.errors.0 }}</span>
+                {% endif %}
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="{{ form.event_date.id_for_label }}">Event Date</label>
+                    {{ form.event_date }}
+                    {% if form.event_date.errors %}
+                        <span class="error-message">{{ form.event_date.errors.0 }}</span>
+                    {% endif %}
+                </div>
+                
+                <div class="form-group">
+                    <label for="{{ form.event_venue.id_for_label }}">Event Venue</label>
+                    {{ form.event_venue }}
+                    {% if form.event_venue.errors %}
+                        <span class="error-message">{{ form.event_venue.errors.0 }}</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-section">
+            <h3>Application Statement</h3>
+            
+            <div class="form-group">
+                <label for="{{ form.reason.id_for_label }}">Why should this event be awarded to you?</label>
+                {{ form.reason }}
+                <small class="form-hint">Explain your need, planned use of funds, and why you deserve this support.</small>
+                {% if form.reason.errors %}
+                    <span class="error-message">{{ form.reason.errors.0 }}</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-lg">Submit Application</button>
+            <a href="{% url 'events_list' %}" class="btn btn-link">Cancel</a>
+        </div>
+    </form>
+</section>
+{% endblock %}

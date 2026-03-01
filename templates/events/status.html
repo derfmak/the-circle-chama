@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Application Status - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Application Status</h1>
+    <p>{{ application.event.name }}</p>
+</section>
+
+<section class="content-section">
+    <div class="status-card status-{{ application.status }}">
+        <div class="status-header">
+            <div class="status-icon-large">
+                {% if application.status == 'pending' %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                {% elif application.status == 'approved' %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                {% else %}
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                {% endif %}
+            </div>
+            
+            <h2 class="status-title">{{ application.get_status_display }}</h2>
+            <p class="status-date">Applied on {{ application.applied_at|date:"F d, Y at H:i" }}</p>
+        </div>
+        
+        <div class="status-details">
+            <div class="detail-section">
+                <h4>Event Information</h4>
+                <div class="detail-row">
+                    <span class="label">Event:</span>
+                    <span class="value">{{ application.event.name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Date:</span>
+                    <span class="value">{{ application.event.date|date:"F d, Y" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Venue:</span>
+                    <span class="value">{{ application.event.venue }}</span>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4>Your Application</h4>
+                <div class="detail-row">
+                    <span class="label">Applicant:</span>
+                    <span class="value">{{ application.applicant_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">ID Number:</span>
+                    <span class="value">{{ application.id_number }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Your Event:</span>
+                    <span class="value">{{ application.event_name }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Your Event Date:</span>
+                    <span class="value">{{ application.event_date|date:"F d, Y" }}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="label">Your Venue:</span>
+                    <span class="value">{{ application.event_venue }}</span>
+                </div>
+            </div>
+            
+            <div class="detail-section">
+                <h4>Your Statement</h4>
+                <p class="statement-text">{{ application.reason }}</p>
+            </div>
+        </div>
+        
+        <div class="status-footer">
+            {% if application.status == 'pending' %}
+                <div class="alert alert-info">
+                    Your application is under review. You will be notified once a decision is made.
+                </div>
+            {% elif application.status == 'approved' %}
+                <div class="alert alert-success">
+                    <strong>Congratulations!</strong> Your application has been approved. 
+                    Contact admin for next steps.
+                </div>
+            {% else %}
+                <div class="alert alert-error">
+                    Your application was not selected this time. You can apply for the next event.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<section class="content-section">
+    <a href="{% url 'events_list' %}" class="btn btn-secondary">Back to Events</a>
+</section>
+{% endblock %}

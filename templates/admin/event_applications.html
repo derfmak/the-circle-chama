@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+
+{% block title %}Event Applications - {{ event.name }} - THE CIRCLE{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1>Event Applications</h1>
+    <p>{{ event.name }} - {{ event.get_month_display }} {{ event.year }}</p>
+</section>
+
+{% if winner_exists %}
+<section class="content-section">
+    <div class="alert alert-success">
+        <h4>Winner Selected</h4>
+        <p>This event has been awarded to <strong>{{ winner_history.member.get_full_name }}</strong>.</p>
+    </div>
+</section>
+{% endif %}
+
+<section class="content-section">
+    <h2>Applications ({{ applications.count }})</h2>
+    
+    {% if applications %}
+        <div class="applications-list">
+            {% for application in applications %}
+                <div class="application-card status-{{ application.status }}">
+                    <div class="application-header">
+                        <div class="applicant-info">
+                            <h4>{{ application.applicant_name }}</h4>
+                            <p>ID: {{ application.id_number }} | Member: {{ application.applicant.get_full_name }}</p>
+                        </div>
+                        <div class="application-status">
+                            <span class="badge badge-{{ application.status }}">
+                                {{ application.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+                    
+                    <div class="application-details">
+                        <div class="detail-row">
+                            <span class="label">Event Name:</span>
+                            <span class="value">{{ application.event_name }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Event Date:</span>
+                            <span class="value">{{ application.event_date|date:"F d, Y" }}</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Venue:</span>
+                            <span class="value">{{ application.event_venue }}</span>
+                        </div>
+                        <div class="detail-block">
+                            <span class="label">Reason:</span>
+                            <p class="value">{{ application.reason }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if not winner_exists %}
+                        <form method="post" class="application-action">
+                            {% csrf_token %}
+                            <input type="hidden" name="application_id" value="{{ application.id }}">
+                            <button type="submit" class="btn btn-success btn-lg btn-block" 
+                                    onclick="return confirm('Select {{ application.applicant_name }} as winner? All other applications will be rejected.')">
+                                Select as Winner
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No applications for this event yet.</p>
+    {% endif %}
+</section>
+
+<section class="content-section">
+    <a href="{% url 'admin_events' %}" class="btn btn-secondary">Back to Events</a>
+</section>
+{% endblock %}
