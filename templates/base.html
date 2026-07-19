@@ -4,53 +4,686 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>{% block title %}THE CIRCLE{% endblock %}</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <meta name="description" content="Elites Pioneer Club Chama Management System">
+    <meta name="theme-color" content="#1a3c2a">
+    <title>{% block title %}Elites Pioneer Club{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --epc-cream: #f0eee6;
+            --epc-forest: #1a3c2a;
+            --epc-forest-deep: #0f281c;
+            --epc-forest-soft: #234f38;
+            --epc-gold: #f5b041;
+            --epc-gold-deep: #e07c1f;
+            --epc-ink: #1e2e2a;
+            --epc-mist: #ddd8c8;
+            --font-display: 'Space Grotesk', sans-serif;
+            --font-body: 'Inter', sans-serif;
+            --font-mono: 'IBM Plex Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--epc-cream);
+            color: var(--epc-ink);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        a {
+            font-family: inherit;
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--epc-gold);
+            outline-offset: 3px;
+            border-radius: 4px;
+        }
+
+        .navbar {
+            background: var(--epc-forest);
+            padding: 14px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border-bottom: 1px solid rgba(245, 176, 65, 0.25);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            min-height: 70px;
+            transition: box-shadow 0.3s ease, background 0.3s ease;
+        }
+
+        .navbar.is-scrolled {
+            background: var(--epc-forest-deep);
+            box-shadow: 0 8px 24px rgba(15, 40, 28, 0.35);
+        }
+
+        .nav-brand a {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: #fdfbf5;
+            font-family: var(--font-display);
+            font-size: 1.4rem;
+            font-weight: 700;
+            text-decoration: none;
+            letter-spacing: 0.02em;
+        }
+
+        .nav-brand .brand-mark {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: 2px solid var(--epc-gold);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .nav-brand .brand-mark::after {
+            content: '';
+            position: absolute;
+            inset: 6px;
+            border-radius: 50%;
+            background: var(--epc-gold);
+            transition: transform 0.4s ease;
+        }
+
+        .nav-brand a:hover .brand-mark::after {
+            transform: scale(1.3);
+        }
+
+        .nav-brand a span {
+            color: var(--epc-gold);
+        }
+
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            gap: 5px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 4px;
+            z-index: 1002;
+            position: relative;
+        }
+
+        .nav-toggle span {
+            display: block;
+            width: 26px;
+            height: 2px;
+            background: #fdfbf5;
+            border-radius: 3px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-toggle.active span:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 6px);
+        }
+
+        .nav-toggle.active span:nth-child(2) {
+            opacity: 0;
+        }
+
+        .nav-toggle.active span:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -6px);
+        }
+
+        .nav-menu {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            list-style: none;
+            flex-wrap: wrap;
+            margin: 0;
+            padding: 0;
+        }
+
+        .nav-menu li {
+            display: inline-block;
+        }
+
+        .nav-menu a {
+            position: relative;
+            color: rgba(253, 251, 245, 0.78);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 500;
+            font-size: 0.92rem;
+            transition: color 0.25s ease;
+            display: block;
+            cursor: pointer;
+        }
+
+        .nav-menu a::before {
+            content: '';
+            position: absolute;
+            left: 16px;
+            right: 16px;
+            bottom: 4px;
+            height: 2px;
+            background: var(--epc-gold);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-menu a:hover {
+            color: var(--epc-gold);
+        }
+
+        .nav-menu a:hover::before {
+            transform: scaleX(1);
+        }
+
+        .nav-menu a.active {
+            color: var(--epc-gold);
+        }
+
+        .nav-menu a.active::before {
+            transform: scaleX(1);
+        }
+
+        .btn-login,
+        .btn-admin,
+        .btn-logout {
+            font-family: var(--font-display);
+        }
+
+        .btn-login::before,
+        .btn-admin::before,
+        .btn-logout::before {
+            display: none;
+        }
+
+        .btn-login {
+            background: var(--epc-gold);
+            color: var(--epc-forest-deep) !important;
+            font-weight: 600;
+        }
+
+        .btn-login:hover {
+            background: var(--epc-gold-deep);
+            color: #fdfbf5 !important;
+            transform: translateY(-1px);
+        }
+
+        .btn-admin {
+            border: 1.5px solid rgba(245, 176, 65, 0.6);
+            color: var(--epc-gold) !important;
+        }
+
+        .btn-admin:hover {
+            background: var(--epc-gold);
+            color: var(--epc-forest-deep) !important;
+            border-color: var(--epc-gold);
+        }
+
+        .btn-logout {
+            color: var(--epc-gold) !important;
+            border: 1px solid rgba(245, 176, 65, 0.4);
+        }
+
+        .btn-logout:hover {
+            background: var(--epc-gold);
+            color: var(--epc-forest-deep) !important;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        .messages {
+            margin-bottom: 20px;
+        }
+
+        .alert {
+            padding: 14px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            font-weight: 500;
+            font-size: 0.92rem;
+            border-left: 4px solid transparent;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .alert-success {
+            background: #e2f2e6;
+            color: #1e5c33;
+            border-left-color: #2f9e50;
+        }
+
+        .alert-error {
+            background: #fbe4e4;
+            color: #8a2c2c;
+            border-left-color: #d94545;
+        }
+
+        .alert-info {
+            background: #e2eef4;
+            color: #1c5468;
+            border-left-color: #2f8fae;
+        }
+
+        .alert-warning {
+            background: #fbf0d9;
+            color: #7a5a10;
+            border-left-color: var(--epc-gold-deep);
+        }
+
+        .footer {
+            background: var(--epc-forest-deep);
+            color: rgba(240, 238, 230, 0.6);
+            padding: 40px 20px 30px;
+            margin-top: auto;
+            border-top: 1px solid rgba(245, 176, 65, 0.2);
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1.5fr 1fr 1fr;
+            gap: 40px;
+            text-align: left;
+        }
+
+        .footer-brand p {
+            font-size: 0.88rem;
+            line-height: 1.7;
+            color: rgba(240, 238, 230, 0.5);
+            max-width: 320px;
+            margin-top: 8px;
+        }
+
+        .footer-brand .brand-name {
+            font-family: var(--font-display);
+            font-size: 1.2rem;
+            color: #fdfbf5;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .footer-brand .brand-name span {
+            color: var(--epc-gold);
+        }
+
+        .footer-col h4 {
+            font-family: var(--font-display);
+            font-size: 0.85rem;
+            color: #fdfbf5;
+            margin-bottom: 14px;
+            letter-spacing: 0.02em;
+        }
+
+        .footer-col ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-col ul li {
+            margin-bottom: 8px;
+        }
+
+        .footer-col ul li a {
+            color: rgba(240, 238, 230, 0.5);
+            text-decoration: none;
+            font-size: 0.88rem;
+            transition: color 0.25s ease;
+            position: relative;
+        }
+
+        .footer-col ul li a::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: -2px;
+            height: 1px;
+            background: var(--epc-gold);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
+        }
+
+        .footer-col ul li a:hover {
+            color: var(--epc-gold);
+        }
+
+        .footer-col ul li a:hover::after {
+            transform: scaleX(1);
+        }
+
+        .footer-bottom {
+            max-width: 1200px;
+            margin: 30px auto 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(245, 176, 65, 0.12);
+            text-align: center;
+            font-size: 0.82rem;
+            color: rgba(240, 238, 230, 0.35);
+        }
+
+        .footer-bottom span {
+            color: var(--epc-gold);
+            font-family: var(--font-display);
+        }
+
+        /* ===================== TABLET / MOBILE (<=768px) ===================== */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 12px 16px;
+                min-height: 60px;
+                position: sticky;
+            }
+
+            .nav-brand a {
+                font-size: 1.15rem;
+            }
+
+            .nav-toggle {
+                display: flex;
+            }
+
+            /* Dropdown card anchored top-right, not a full-screen panel */
+            .nav-menu {
+                display: flex;
+                flex-direction: column;
+                position: absolute;
+                top: calc(100% + 10px);
+                right: 16px;
+                width: min(240px, calc(100vw - 32px));
+                background: var(--epc-forest-deep);
+                border: 1px solid rgba(245, 176, 65, 0.18);
+                border-radius: 14px;
+                box-shadow: 0 20px 40px rgba(15, 40, 28, 0.4);
+                padding: 8px;
+                gap: 2px;
+                max-height: 0;
+                opacity: 0;
+                transform: translateY(-8px);
+                pointer-events: none;
+                overflow: hidden;
+                transition: max-height 0.3s ease, opacity 0.22s ease, transform 0.22s ease, padding 0.3s ease;
+            }
+
+            .nav-menu.active {
+                max-height: 80vh;
+                opacity: 1;
+                transform: translateY(0);
+                pointer-events: auto;
+                overflow-y: auto;
+                padding: 8px;
+            }
+
+            .nav-menu li {
+                width: 100%;
+            }
+
+            .nav-menu a {
+                padding: 11px 16px;
+                width: 100%;
+                border-radius: 8px;
+                font-size: 0.94rem;
+            }
+
+            .nav-menu a::before {
+                display: none;
+            }
+
+            .nav-menu a:hover,
+            .nav-menu a.active {
+                background: rgba(245, 176, 65, 0.12);
+            }
+
+            .btn-login,
+            .btn-admin,
+            .btn-logout {
+                text-align: center;
+            }
+
+            .main-content {
+                padding: 16px;
+            }
+
+            .footer {
+                padding: 28px 16px 18px;
+            }
+
+            /* Two compact columns instead of one tall vertical stack */
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 20px 16px;
+                text-align: left;
+            }
+
+            .footer-brand {
+                grid-column: 1 / -1;
+                text-align: center;
+                padding-bottom: 12px;
+                border-bottom: 1px solid rgba(245, 176, 65, 0.12);
+                margin-bottom: 4px;
+            }
+
+            .footer-brand p {
+                max-width: 100%;
+                margin: 6px auto 0;
+            }
+
+            .footer-col h4 {
+                margin-bottom: 10px;
+                font-size: 0.8rem;
+            }
+
+            .footer-col ul li {
+                margin-bottom: 6px;
+            }
+
+            .footer-bottom {
+                margin-top: 18px;
+                padding-top: 14px;
+            }
+        }
+
+        /* ===================== SMALL MOBILE (<=480px) ===================== */
+        @media (max-width: 480px) {
+            .navbar {
+                padding: 10px 12px;
+                min-height: 54px;
+            }
+
+            .nav-brand a {
+                font-size: 1rem;
+            }
+
+            .nav-brand .brand-mark {
+                width: 20px;
+                height: 20px;
+            }
+
+            .nav-toggle {
+                padding: 6px;
+            }
+
+            .nav-toggle span {
+                width: 22px;
+                height: 2px;
+            }
+
+            .nav-menu {
+                right: 12px;
+                width: min(220px, calc(100vw - 24px));
+            }
+
+            .nav-menu a {
+                padding: 10px 14px;
+                font-size: 0.9rem;
+            }
+
+            .main-content {
+                padding: 12px;
+            }
+
+            .alert {
+                padding: 10px 14px;
+                font-size: 0.85rem;
+            }
+
+            .footer {
+                padding: 22px 12px 14px;
+            }
+
+            .footer-content {
+                gap: 16px 12px;
+            }
+
+            .footer-col ul li a {
+                font-size: 0.85rem;
+            }
+
+            .footer-bottom {
+                font-size: 0.75rem;
+                margin-top: 14px;
+                padding-top: 12px;
+            }
+        }
+
+        @media (orientation: landscape) and (max-height: 500px) {
+            .navbar {
+                padding: 8px 16px;
+                min-height: 48px;
+            }
+
+            .nav-brand a {
+                font-size: 1rem;
+            }
+
+            .nav-menu a {
+                padding: 6px 14px;
+                font-size: 0.85rem;
+            }
+
+            .main-content {
+                padding: 12px;
+            }
+        }
+
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .navbar {
+                padding: 14px 24px;
+            }
+
+            .nav-menu a {
+                padding: 6px 12px;
+                font-size: 0.88rem;
+            }
+
+            .main-content {
+                padding: 18px;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .main-content {
+                max-width: 1400px;
+                padding: 30px;
+            }
+
+            .nav-brand a {
+                font-size: 1.6rem;
+            }
+
+            .nav-menu a {
+                padding: 10px 20px;
+                font-size: 0.95rem;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            html {
+                scroll-behavior: auto;
+            }
+
+            * {
+                transition: none !important;
+                animation: none !important;
+            }
+        }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar">
+    <nav class="navbar" role="navigation" aria-label="Main navigation" id="siteNavbar">
         <div class="nav-brand">
-            <a href="{% url 'home' %}">THE CIRCLE</a>
+            <a href="{% url 'home' %}" aria-label="Elites Pioneer Club Home">
+                <span class="brand-mark" aria-hidden="true"></span>
+                Elites <span>Pioneer Club</span>
+            </a>
         </div>
-        <div class="nav-toggle">
+        <button class="nav-toggle" aria-label="Toggle navigation menu" aria-expanded="false" id="navToggle">
             <span></span>
             <span></span>
             <span></span>
-        </div>
-        <ul class="nav-menu" id="navMenu">
+        </button>
+        <ul class="nav-menu" id="navMenu" role="menu">
             {% if user.is_authenticated %}
                 {% if user.is_admin %}
-                    <li><a href="{% url 'admin_dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'admin_members_list' %}">Members</a></li>
-                    <li><a href="{% url 'admin_contributions' %}">Contributions</a></li>
-                    <li><a href="{% url 'admin_meetings' %}">Meetings</a></li>
-                    <li><a href="{% url 'admin_events' %}">Events</a></li>
-                    <li><a href="{% url 'admin_announcements' %}">Announcements</a></li>
-                    <li><a href="{% url 'admin_messages' %}">Messages</a></li>
+                    <li role="none"><a href="{% url 'admin_dashboard' %}" role="menuitem">Dashboard</a></li>
+                    <li role="none"><a href="{% url 'admin_members_list' %}" role="menuitem">Members</a></li>
+                    <li role="none"><a href="{% url 'admin_contributions' %}" role="menuitem">Contributions</a></li>
+                    <li role="none"><a href="{% url 'admin_meetings' %}" role="menuitem">Meetings</a></li>
+                    <li role="none"><a href="{% url 'admin_events' %}" role="menuitem">Events</a></li>
+                    <li role="none"><a href="{% url 'admin_announcements' %}" role="menuitem">Announcements</a></li>
+                    <li role="none"><a href="{% url 'admin_messages' %}" role="menuitem">Messages</a></li>
                 {% else %}
-                    <li><a href="{% url 'member_dashboard' %}">Dashboard</a></li>
-                    <li><a href="{% url 'contributions' %}">Contributions</a></li>
-                    <li><a href="{% url 'meetings_list' %}">Meetings</a></li>
-                    <li><a href="{% url 'events_list' %}">Events</a></li>
-                    <li><a href="{% url 'announcements_list' %}">Announcements</a></li>
-                    <li><a href="{% url 'profile' %}">Profile</a></li>
+                    <li role="none"><a href="{% url 'member_dashboard' %}" role="menuitem">Dashboard</a></li>
+                    <li role="none"><a href="{% url 'contributions' %}" role="menuitem">Contributions</a></li>
+                    <li role="none"><a href="{% url 'meetings_list' %}" role="menuitem">Meetings</a></li>
+                    <li role="none"><a href="{% url 'events_list' %}" role="menuitem">Events</a></li>
+                    <li role="none"><a href="{% url 'announcements_list' %}" role="menuitem">Announcements</a></li>
+                    <li role="none"><a href="{% url 'profile' %}" role="menuitem">Profile</a></li>
                 {% endif %}
-                <li><a href="{% url 'logout' %}" class="btn-logout">Logout</a></li>
+                <li role="none"><a href="{% url 'logout' %}" class="btn-logout" role="menuitem">Logout</a></li>
             {% else %}
-                <li><a href="{% url 'home' %}">Home</a></li>
-                <li><a href="{% url 'about' %}">About</a></li>
-                <li><a href="{% url 'contact' %}">Contact</a></li>
-                <li><a href="{% url 'login' %}" class="btn-login">Member Login</a></li>
-                <li><a href="{% url 'admin_login' %}" class="btn-admin">Admin</a></li>
+                <li role="none"><a href="{% url 'home' %}" role="menuitem">Home</a></li>
+                <li role="none"><a href="{% url 'about' %}" role="menuitem">About</a></li>
+                <li role="none"><a href="{% url 'contact' %}" role="menuitem">Contact</a></li>
+                <li role="none"><a href="{% url 'login' %}" class="btn-login" role="menuitem">Member Login</a></li>
+                <li role="none"><a href="{% url 'admin_login' %}" class="btn-admin" role="menuitem">Admin</a></li>
             {% endif %}
         </ul>
     </nav>
 
-    <main class="main-content">
+    <main class="main-content" role="main">
         {% if messages %}
-            <div class="messages">
+            <div class="messages" role="alert">
                 {% for message in messages %}
                     <div class="alert alert-{{ message.tags }}">
                         {{ message }}
@@ -58,34 +691,161 @@
                 {% endfor %}
             </div>
         {% endif %}
-        
+
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="footer">
-        <p>&copy; {% now "Y" %} THE CIRCLE Chama. All rights reserved.</p>
+    <footer class="footer" role="contentinfo">
+        <div class="footer-content">
+            <div class="footer-brand">
+                <a href="{% url 'home' %}" class="brand-name">Elites <span>Pioneer Club</span></a>
+                <p>Building wealth together through unity, discipline, and mutual support. A registered chama based in Kenya.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Quick Links</h4>
+                <ul>
+                    <li><a href="{% url 'home' %}">Home</a></li>
+                    <li><a href="{% url 'about' %}">About Us</a></li>
+                    <li><a href="{% url 'contact' %}">Contact</a></li>
+                    <li><a href="{% url 'login' %}">Member Login</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Legal</h4>
+                <ul>
+                    <li><a href="{% url 'privacy' %}">Privacy Policy</a></li>
+                    <li><a href="{% url 'terms' %}">Terms of Service</a></li>
+                    <li><a href="{% url 'contact' %}">Support</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; {% now "Y" %} <span>Elites Pioneer Club</span>. All rights reserved.</p>
+        </div>
     </footer>
 
-    <script src="{% static 'js/main.js' %}"></script>
     <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const currentPath = window.location.pathname;
-    const navLinks = document.querySelectorAll('.nav-menu a');
-    
-    navLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        
-        if (href === currentPath || 
-            (currentPath.startsWith(href) && href !== '/' && href !== '')) {
-            link.classList.add('active');
-        }
-        
-        if (href === '/' && currentPath === '/') {
-            link.classList.add('active');
-        }
-    });
-});
-</script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.nav-menu a');
+
+            navLinks.forEach(function(link) {
+                const href = link.getAttribute('href');
+
+                if (href === currentPath ||
+                    (currentPath.startsWith(href) && href !== '/' && href !== '')) {
+                    link.classList.add('active');
+                }
+
+                if (href === '/' && currentPath === '/') {
+                    link.classList.add('active');
+                }
+            });
+
+            const toggle = document.getElementById('navToggle');
+            const menu = document.getElementById('navMenu');
+
+            function closeMenu() {
+                menu.classList.remove('active');
+                toggle.setAttribute('aria-expanded', 'false');
+                toggle.classList.remove('active');
+            }
+
+            function openMenu() {
+                menu.classList.add('active');
+                toggle.setAttribute('aria-expanded', 'true');
+                toggle.classList.add('active');
+            }
+
+            if (toggle && menu) {
+                toggle.addEventListener('click', function(event) {
+                    event.stopPropagation();
+                    const isOpen = menu.classList.contains('active');
+                    if (isOpen) {
+                        closeMenu();
+                    } else {
+                        openMenu();
+                    }
+                });
+
+                // Close when clicking anywhere outside the toggle/menu
+                document.addEventListener('click', function(event) {
+                    const isClickInside = toggle.contains(event.target) || menu.contains(event.target);
+                    if (!isClickInside && menu.classList.contains('active')) {
+                        closeMenu();
+                    }
+                });
+
+                // Close on Escape
+                document.addEventListener('keydown', function(event) {
+                    if (event.key === 'Escape' && menu.classList.contains('active')) {
+                        closeMenu();
+                        toggle.focus();
+                    }
+                });
+
+                // Close after selecting a link (mobile only)
+                const menuLinks = menu.querySelectorAll('a');
+                menuLinks.forEach(function(link) {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 768) {
+                            closeMenu();
+                        }
+                    });
+                });
+
+                // Reset state if resized back to desktop width
+                window.addEventListener('resize', function() {
+                    if (window.innerWidth > 768) {
+                        closeMenu();
+                    }
+                });
+            }
+
+            const navbar = document.getElementById('siteNavbar');
+            if (navbar) {
+                const handleScroll = function() {
+                    if (window.scrollY > 8) {
+                        navbar.classList.add('is-scrolled');
+                    } else {
+                        navbar.classList.remove('is-scrolled');
+                    }
+                };
+                handleScroll();
+                window.addEventListener('scroll', handleScroll, { passive: true });
+            }
+
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transform = 'translateY(-20px)';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 300);
+                }, 5000);
+            });
+
+            const mainContent = document.querySelector('.main-content');
+            if (mainContent) {
+                const observer = new ResizeObserver(function() {
+                    const footer = document.querySelector('.footer');
+                    if (footer) {
+                        const contentHeight = mainContent.offsetHeight;
+                        const windowHeight = window.innerHeight;
+                        if (contentHeight < windowHeight - 100) {
+                            footer.style.position = 'absolute';
+                            footer.style.bottom = '0';
+                            footer.style.width = '100%';
+                        } else {
+                            footer.style.position = 'relative';
+                        }
+                    }
+                });
+                observer.observe(mainContent);
+            }
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

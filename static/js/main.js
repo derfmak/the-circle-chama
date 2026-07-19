@@ -4,14 +4,29 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (navToggle) {
         navToggle.addEventListener('click', function() {
-            navMenu.classList.toggle('active');
-            
+            const isActive = navMenu.classList.toggle('active');
             const spans = this.querySelectorAll('span');
-            if (navMenu.classList.contains('active')) {
+            
+            if (isActive) {
                 spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
                 spans[1].style.opacity = '0';
                 spans[2].style.transform = 'rotate(-45deg) translate(7px, -6px)';
+                this.setAttribute('aria-expanded', 'true');
             } else {
+                spans[0].style.transform = 'none';
+                spans[1].style.opacity = '1';
+                spans[2].style.transform = 'none';
+                this.setAttribute('aria-expanded', 'false');
+            }
+        });
+        
+        document.addEventListener('click', function(event) {
+            const isClickInside = navToggle.contains(event.target) || navMenu.contains(event.target);
+            if (!isClickInside && navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+                navToggle.classList.remove('active');
+                navToggle.setAttribute('aria-expanded', 'false');
+                const spans = navToggle.querySelectorAll('span');
                 spans[0].style.transform = 'none';
                 spans[1].style.opacity = '1';
                 spans[2].style.transform = 'none';
@@ -23,10 +38,11 @@ document.addEventListener('DOMContentLoaded', function() {
     messages.forEach(function(message) {
         setTimeout(function() {
             message.style.opacity = '0';
-            message.style.transition = 'opacity 0.5s ease';
+            message.style.transform = 'translateY(-20px)';
+            message.style.transition = 'all 0.3s ease';
             setTimeout(function() {
                 message.remove();
-            }, 500);
+            }, 300);
         }, 5000);
     });
     
@@ -37,29 +53,44 @@ document.addEventListener('DOMContentLoaded', function() {
             let isValid = true;
             
             requiredFields.forEach(function(field) {
+                const existingError = field.parentNode.querySelector('.error-message');
+                if (existingError) {
+                    existingError.remove();
+                }
+                
                 if (!field.value.trim()) {
                     isValid = false;
                     field.classList.add('error');
+                    field.style.borderColor = '#ef4444';
                     
-                    let errorMsg = field.parentNode.querySelector('.error-message');
-                    if (!errorMsg) {
-                        errorMsg = document.createElement('span');
-                        errorMsg.className = 'error-message';
-                        errorMsg.textContent = 'This field is required';
-                        field.parentNode.appendChild(errorMsg);
-                    }
+                    const errorMsg = document.createElement('span');
+                    errorMsg.className = 'error-message';
+                    errorMsg.textContent = 'This field is required';
+                    field.parentNode.appendChild(errorMsg);
                 } else {
                     field.classList.remove('error');
-                    const errorMsg = field.parentNode.querySelector('.error-message');
-                    if (errorMsg) {
-                        errorMsg.remove();
-                    }
+                    field.style.borderColor = '';
                 }
             });
             
             if (!isValid) {
                 e.preventDefault();
+                const firstError = form.querySelector('.error');
+                if (firstError) {
+                    firstError.focus();
+                }
             }
+        });
+        
+        form.querySelectorAll('input, textarea, select').forEach(function(field) {
+            field.addEventListener('input', function() {
+                this.classList.remove('error');
+                this.style.borderColor = '';
+                const errorMsg = this.parentNode.querySelector('.error-message');
+                if (errorMsg) {
+                    errorMsg.remove();
+                }
+            });
         });
     });
     
@@ -96,7 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    document.querySelectorAll('a[href^="#"]').forEach(function(anchor) {
         anchor.addEventListener('click', function(e) {
             e.preventDefault();
             const target = document.querySelector(this.getAttribute('href'));
@@ -115,35 +146,53 @@ document.addEventListener('DOMContentLoaded', function() {
             window.print();
         });
     });
+    
+    const currentPath = window.location.pathname;
+    const navLinks = document.querySelectorAll('.nav-menu a');
+    navLinks.forEach(function(link) {
+        const href = link.getAttribute('href');
+        if (href === currentPath || 
+            (currentPath.startsWith(href) && href !== '/' && href !== '' && href !== '#')) {
+            link.classList.add('active');
+        }
+        if (href === '/' && currentPath === '/') {
+            link.classList.add('active');
+        }
+    });
 });
 
-function showNotification(message, type = 'info') {
+function showNotification(message, type) {
+    type = type || 'info';
     const notification = document.createElement('div');
-    notification.className = `alert alert-${type}`;
+    notification.className = 'alert alert-' + type;
     notification.textContent = message;
     notification.style.position = 'fixed';
     notification.style.top = '20px';
     notification.style.right = '20px';
     notification.style.zIndex = '9999';
-    notification.style.maxWidth = '300px';
+    notification.style.maxWidth = '400px';
+    notification.style.boxShadow = '0 10px 15px -3px rgba(0,0,0,0.1)';
+    notification.style.animation = 'slideIn 0.3s ease';
     
     document.body.appendChild(notification);
     
     setTimeout(function() {
         notification.style.opacity = '0';
-        notification.style.transition = 'opacity 0.5s ease';
+        notification.style.transform = 'translateY(-20px)';
+        notification.style.transition = 'all 0.3s ease';
         setTimeout(function() {
             notification.remove();
-        }, 500);
+        }, 300);
     }, 3000);
 }
 
 function debounce(func, wait) {
     let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
+    return function executedFunction() {
+        const args = arguments;
+        const later = function() {
             clearTimeout(timeout);
-            func(...args);
+            func.apply(null, args);
         };
         clearTimeout(timeout);
         timeout = setTimeout(later, wait);
@@ -157,4 +206,99 @@ function formatCurrency(amount) {
 function formatDate(dateString) {
     const options = { year: 'numeric', month: 'short', day: 'numeric' };
     return new Date(dateString).toLocaleDateString('en-US', options);
+}
+
+function formatDateTime(dateString) {
+    const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+    return new Date(dateString).toLocaleDateString('en-US', options);
+}
+
+function getStatusBadge(status) {
+    const statusMap = {
+        'pending': 'badge-pending',
+        'paid': 'badge-paid',
+        'completed': 'badge-completed',
+        'success': 'badge-success',
+        'paid_late': 'badge-paid_late',
+        'partial': 'badge-partial',
+        'active': 'badge-active',
+        'inactive': 'badge-inactive',
+        'dropped': 'badge-dropped',
+        'accepted': 'badge-accepted',
+        'absent': 'badge-absent',
+        'absent_with_apology': 'badge-absent_with_apology',
+        'scheduled': 'badge-scheduled',
+        'new': 'badge-new',
+        'read': 'badge-read',
+        'replied': 'badge-replied',
+        'archived': 'badge-archived'
+    };
+    return statusMap[status] || 'badge-pending';
+}
+
+function validateEmail(email) {
+    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return re.test(email);
+}
+
+function validatePhone(phone) {
+    const re = /^\+?[\d\s-]{10,15}$/;
+    return re.test(phone);
+}
+
+function getCsrfToken() {
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(function(row) {
+            return row.startsWith('csrftoken=');
+        });
+    
+    if (cookieValue) {
+        return cookieValue.split('=')[1];
+    }
+    return null;
+}
+
+function showLoading(element) {
+    if (element) {
+        element.disabled = true;
+        element.innerHTML = '<span class="spinner"></span> Loading...';
+        element.style.opacity = '0.7';
+    }
+}
+
+function hideLoading(element, originalText) {
+    if (element) {
+        element.disabled = false;
+        element.innerHTML = originalText || element.innerHTML;
+        element.style.opacity = '1';
+    }
+}
+
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() {
+            showNotification('Copied to clipboard!', 'success');
+        }).catch(function() {
+            fallbackCopy(text);
+        });
+    } else {
+        fallbackCopy(text);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        showNotification('Copied to clipboard!', 'success');
+    } catch (err) {
+        showNotification('Failed to copy', 'error');
+    }
+    document.body.removeChild(textarea);
 }

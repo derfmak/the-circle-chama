@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', include('apps.accounts.urls')),
@@ -9,8 +10,10 @@ urlpatterns = [
     path('meetings/', include('apps.meetings.urls')),
     path('events/', include('apps.events.urls')),
     path('payments/', include('apps.payments.urls')),
-    path('announcements/', include('apps.announcements.urls')),
+    path('privacy/', TemplateView.as_view(template_name='public/privacy.html'), name='privacy'),
+    path('terms/', TemplateView.as_view(template_name='public/terms.html'), name='terms'),
     path('contact/', include('apps.message.urls')),
+    path('announcements/', include('apps.announcements.urls')),
     path('admin-panel/', include('apps.accounts.admin_urls')),
     path('admin-panel/contributions/', include('apps.members.admin_urls')),
     path('admin-panel/meetings/', include('apps.meetings.admin_urls')),

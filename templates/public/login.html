@@ -1,23 +1,440 @@
 {% extends 'base.html' %}
 
-{% block title %}Member Login - THE CIRCLE{% endblock %}
+{% block title %}Member Login - Elites Pioneer Club{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --epc-cream: #f0eee6;
+        --epc-forest: #1a3c2a;
+        --epc-forest-deep: #0f281c;
+        --epc-gold: #f5b041;
+        --epc-gold-deep: #e07c1f;
+        --epc-ink: #1e2e2a;
+        --epc-mist: #ddd8c8;
+        --font-display: 'Space Grotesk', sans-serif;
+        --font-body: 'Inter', sans-serif;
+        --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    .auth-section {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: calc(100vh - 280px);
+        padding: 48px 12px 64px;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 440px;
+    }
+
+    .auth-card {
+        background: #fdfbf5;
+        border: 1px solid var(--epc-mist);
+        border-top: 4px solid var(--epc-gold);
+        border-radius: 20px;
+        padding: 44px 40px;
+        box-shadow: 0 24px 50px rgba(15, 40, 28, 0.1);
+        position: relative;
+        opacity: 0;
+        transform: translateY(16px);
+        animation: cardIn 0.5s ease forwards;
+        transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .auth-card:hover {
+        box-shadow: 0 28px 60px rgba(15, 40, 28, 0.15);
+        border-color: rgba(245, 176, 65, 0.2);
+    }
+
+    @keyframes cardIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .auth-card .brand-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: var(--epc-forest);
+        border: 3px solid var(--epc-gold);
+        margin-bottom: 16px;
+        position: relative;
+    }
+
+    .auth-card .brand-icon::after {
+        content: '';
+        position: absolute;
+        inset: 8px;
+        border-radius: 50%;
+        background: var(--epc-gold);
+        opacity: 0.3;
+    }
+
+    .auth-card .brand-icon span {
+        position: relative;
+        z-index: 1;
+        color: var(--epc-gold);
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+
+    .auth-card h1 {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        color: var(--epc-forest);
+        letter-spacing: -0.01em;
+        margin-top: 4px;
+    }
+
+    .auth-subtitle {
+        font-size: 0.92rem;
+        color: rgba(30, 46, 42, 0.6);
+        margin-top: 6px;
+        margin-bottom: 28px;
+        line-height: 1.5;
+    }
+
+    .auth-form .alert {
+        margin-bottom: 20px;
+        padding: 14px 18px;
+        border-radius: 10px;
+        font-size: 0.88rem;
+        border-left: 4px solid;
+    }
+
+    .alert-error {
+        background: #fbe4e4;
+        color: #8a2c2c;
+        border-left-color: #d94545;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(30, 46, 42, 0.6);
+        margin-bottom: 6px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 13px 16px;
+        border: 1.5px solid var(--epc-mist);
+        border-radius: 10px;
+        font-family: var(--font-body);
+        font-size: 0.96rem;
+        color: var(--epc-ink);
+        background: #fff;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--epc-gold-deep);
+        box-shadow: 0 0 0 4px rgba(245, 176, 65, 0.18);
+    }
+
+    .form-group input::placeholder {
+        color: rgba(30, 46, 42, 0.3);
+    }
+
+    .password-field {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-field input {
+        flex: 1;
+        padding-right: 68px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 8px;
+        background: transparent;
+        border: none;
+        color: var(--epc-gold-deep);
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        padding: 6px 12px;
+        border-radius: 6px;
+        transition: background 0.25s ease, color 0.25s ease;
+        font-weight: 500;
+    }
+
+    .toggle-password:hover {
+        background: rgba(245, 176, 65, 0.14);
+        color: var(--epc-forest-deep);
+    }
+
+    .error-message {
+        display: block;
+        color: #b03a3a;
+        font-size: 0.8rem;
+        margin-top: 6px;
+    }
+
+    .form-hint {
+        display: block;
+        font-size: 0.76rem;
+        color: rgba(30, 46, 42, 0.45);
+        margin-top: 8px;
+    }
+
+    .form-actions {
+        margin-top: 28px;
+    }
+
+    .btn-block {
+        width: 100%;
+    }
+
+    .auth-form .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 24px;
+        border-radius: 10px;
+        border: none;
+        background: var(--epc-gold);
+        color: var(--epc-forest-deep);
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 0.98rem;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+        width: 100%;
+    }
+
+    .auth-form .btn-primary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--epc-gold-deep);
+        transform: translateY(102%);
+        transition: transform 0.3s cubic-bezier(.65, 0, .35, 1);
+        z-index: 0;
+    }
+
+    .auth-form .btn-primary span {
+        position: relative;
+        z-index: 1;
+    }
+
+    .auth-form .btn-primary:hover::before {
+        transform: translateY(0);
+    }
+
+    .auth-form .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 26px rgba(224, 124, 31, 0.32);
+    }
+
+    .auth-links {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--epc-mist);
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .auth-links .link {
+        font-size: 0.85rem;
+        color: var(--epc-forest);
+        text-decoration: none;
+        position: relative;
+        transition: color 0.25s ease;
+        font-weight: 500;
+    }
+
+    .auth-links .link::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -3px;
+        height: 1.5px;
+        background: var(--epc-gold-deep);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.25s ease;
+    }
+
+    .auth-links .link:hover {
+        color: var(--epc-gold-deep);
+    }
+
+    .auth-links .link:hover::after {
+        transform: scaleX(1);
+    }
+
+    .auth-links .link-register {
+        background: var(--epc-forest);
+        color: #fdfbf5;
+        padding: 8px 20px;
+        border-radius: 50px;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 0.85rem;
+        transition: background 0.25s ease, transform 0.25s ease;
+    }
+
+    .auth-links .link-register::after {
+        display: none;
+    }
+
+    .auth-links .link-register:hover {
+        background: var(--epc-gold);
+        color: var(--epc-forest-deep);
+        transform: translateY(-2px);
+    }
+
+    .auth-divider {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        margin: 20px 0 6px;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+        content: '';
+        flex: 1;
+        height: 1px;
+        background: var(--epc-mist);
+    }
+
+    .auth-divider span {
+        font-family: var(--font-mono);
+        font-size: 0.68rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: rgba(30, 46, 42, 0.3);
+    }
+
+    .social-login {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 6px;
+    }
+
+    .social-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 11px 14px;
+        border-radius: 10px;
+        border: 1.5px solid var(--epc-mist);
+        background: #fff;
+        font-family: var(--font-body);
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--epc-ink);
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-decoration: none;
+    }
+
+    .social-btn:hover {
+        border-color: var(--epc-gold-deep);
+        background: rgba(245, 176, 65, 0.06);
+        transform: translateY(-2px);
+    }
+
+    .social-btn .icon {
+        font-size: 1.1rem;
+    }
+
+    @media (max-width: 480px) {
+        .auth-section {
+            min-height: auto;
+            padding: 36px 8px 48px;
+        }
+
+        .auth-card {
+            padding: 32px 20px;
+            border-radius: 16px;
+        }
+
+        .auth-card h1 {
+            font-size: 1.3rem;
+        }
+
+        .auth-subtitle {
+            font-size: 0.85rem;
+        }
+
+        .auth-links {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+            gap: 12px;
+        }
+
+        .auth-links .link-register {
+            text-align: center;
+        }
+
+        .social-login {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .auth-card {
+            animation: none;
+            opacity: 1;
+            transform: none;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
 <section class="auth-section">
     <div class="auth-container">
         <div class="auth-card">
-            <h1>Member Login</h1>
-            <p class="auth-subtitle">Enter your credentials to access your account</p>
-            
+            <div class="brand-icon">
+                <span>EPC</span>
+            </div>
+            <h1>Welcome Back</h1>
+            <p class="auth-subtitle">Enter your credentials to access your Elites Pioneer Club account</p>
+
             <form method="post" class="auth-form" novalidate>
                 {% csrf_token %}
-                
+
                 {% if form.non_field_errors %}
                     <div class="alert alert-error">
                         {{ form.non_field_errors.0 }}
                     </div>
                 {% endif %}
-                
+
                 <div class="form-group">
                     <label for="{{ form.username.id_for_label }}">Email Address</label>
                     {{ form.username }}
@@ -25,7 +442,7 @@
                         <span class="error-message">{{ form.username.errors.0 }}</span>
                     {% endif %}
                 </div>
-                
+
                 <div class="form-group">
                     <label for="{{ form.password.id_for_label }}">Password</label>
                     <div class="password-field">
@@ -39,13 +456,27 @@
                     {% endif %}
                     <small class="form-hint">Password cannot be pasted. Please type manually.</small>
                 </div>
-                
+
                 <div class="form-actions">
-                    <button type="submit" class="btn btn-primary btn-block">Login</button>
+                    <button type="submit" class="btn btn-primary btn-block"><span>Sign In</span></button>
                 </div>
-                
+
+                <div class="auth-divider">
+                    <span>or</span>
+                </div>
+
+                <div class="social-login">
+                    <a href="#" class="social-btn">
+                        <span class="icon">&#128081;</span> Google
+                    </a>
+                    <a href="#" class="social-btn">
+                        <span class="icon">&#128100;</span> Facebook
+                    </a>
+                </div>
+
                 <div class="auth-links">
                     <a href="{% url 'forgot_password' %}" class="link">Forgot Password?</a>
+                    <a href="{% url 'home' %}" class="link link-register">Join Elites Pioneer Club</a>
                 </div>
             </form>
         </div>
@@ -58,7 +489,7 @@
 function togglePassword(fieldId) {
     const field = document.getElementById(fieldId);
     const button = field.nextElementSibling;
-    
+
     if (field.type === 'password') {
         field.type = 'text';
         button.textContent = 'Hide';
@@ -68,9 +499,23 @@ function togglePassword(fieldId) {
     }
 }
 
-document.querySelector('input[type="password"]').addEventListener('paste', function(e) {
-    e.preventDefault();
-    alert('Pasting password is not allowed for security reasons. Please type your password manually.');
+document.addEventListener('DOMContentLoaded', function() {
+    const passwordField = document.querySelector('input[type="password"]');
+    if (passwordField) {
+        passwordField.addEventListener('paste', function(e) {
+            e.preventDefault();
+            const hint = document.querySelector('.form-hint');
+            if (hint) {
+                const originalText = hint.textContent;
+                hint.textContent = 'Pasting is not allowed. Please type your password manually.';
+                hint.style.color = '#b03a3a';
+                setTimeout(function() {
+                    hint.textContent = originalText;
+                    hint.style.color = '';
+                }, 3000);
+            }
+        });
+    }
 });
 </script>
 {% endblock %}

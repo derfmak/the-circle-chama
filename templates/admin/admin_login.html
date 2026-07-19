@@ -2,22 +2,301 @@
 
 {% block title %}Admin Login - THE CIRCLE{% endblock %}
 
+{% block extra_css %}
+<style>
+    :root {
+        --circle-cream: #f0eee6;
+        --circle-forest: #1a3c2a;
+        --circle-forest-deep: #0f281c;
+        --circle-gold: #f5b041;
+        --circle-gold-deep: #e07c1f;
+        --circle-wine: #7c2d3a;
+        --circle-ink: #1e2e2a;
+        --circle-mist: #ddd8c8;
+        --font-display: 'Space Grotesk', sans-serif;
+        --font-body: 'Inter', sans-serif;
+        --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    .auth-section {
+        display: flex;
+        justify-content: center;
+        padding: 48px 12px 64px;
+    }
+
+    .auth-container {
+        width: 100%;
+        max-width: 440px;
+    }
+
+    .auth-card {
+        background: #fdfbf5;
+        border: 1px solid var(--circle-mist);
+        border-top: 4px solid var(--circle-wine);
+        border-radius: 20px;
+        padding: 44px 40px;
+        box-shadow: 0 24px 50px rgba(15, 40, 28, 0.1);
+        position: relative;
+        opacity: 0;
+        transform: translateY(16px);
+        animation: cardIn 0.5s ease forwards;
+    }
+
+    @keyframes cardIn {
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .auth-card::before {
+        content: '';
+        position: absolute;
+        top: -22px;
+        left: 40px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: var(--circle-forest-deep);
+        border: 3px solid var(--circle-wine);
+    }
+
+    .auth-card::after {
+        content: '';
+        position: absolute;
+        top: -8px;
+        left: 58px;
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        background: var(--circle-wine);
+        transform: rotate(45deg);
+    }
+
+    .auth-card h1 {
+        font-family: var(--font-display);
+        font-size: 1.5rem;
+        color: var(--circle-forest);
+        letter-spacing: -0.01em;
+        margin-top: 14px;
+    }
+
+    .auth-subtitle {
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--circle-wine);
+        margin-top: 8px;
+        margin-bottom: 28px;
+    }
+
+    .auth-form .alert {
+        margin-bottom: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: rgba(30, 46, 42, 0.6);
+        margin-bottom: 8px;
+    }
+
+    .form-group input {
+        width: 100%;
+        padding: 13px 16px;
+        border: 1.5px solid var(--circle-mist);
+        border-radius: 10px;
+        font-family: var(--font-body);
+        font-size: 0.96rem;
+        color: var(--circle-ink);
+        background: #fff;
+        transition: border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .form-group input:focus {
+        outline: none;
+        border-color: var(--circle-wine);
+        box-shadow: 0 0 0 4px rgba(124, 45, 58, 0.12);
+    }
+
+    .password-field {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+
+    .password-field input {
+        flex: 1;
+        padding-right: 68px;
+    }
+
+    .toggle-password {
+        position: absolute;
+        right: 8px;
+        background: transparent;
+        border: none;
+        color: var(--circle-wine);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        cursor: pointer;
+        padding: 6px 10px;
+        border-radius: 6px;
+        transition: background 0.25s ease;
+    }
+
+    .toggle-password:hover {
+        background: rgba(124, 45, 58, 0.08);
+    }
+
+    .error-message {
+        display: block;
+        color: #b03a3a;
+        font-size: 0.8rem;
+        margin-top: 6px;
+    }
+
+    .form-hint {
+        display: block;
+        font-size: 0.76rem;
+        color: rgba(30, 46, 42, 0.5);
+        margin-top: 8px;
+    }
+
+    .form-actions {
+        margin-top: 28px;
+    }
+
+    .btn-block {
+        width: 100%;
+    }
+
+    .auth-form .btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 14px 24px;
+        border-radius: 10px;
+        border: none;
+        background: var(--circle-forest-deep);
+        color: var(--circle-gold);
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 0.98rem;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+        transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .auth-form .btn-primary::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: var(--circle-wine);
+        transform: translateY(102%);
+        transition: transform 0.3s cubic-bezier(.65, 0, .35, 1);
+        z-index: 0;
+    }
+
+    .auth-form .btn-primary span,
+    .auth-form .btn-primary {
+        z-index: 1;
+    }
+
+    .auth-form .btn-primary:hover::before {
+        transform: translateY(0);
+    }
+
+    .auth-form .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 26px rgba(15, 40, 28, 0.3);
+    }
+
+    .auth-links {
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--circle-mist);
+    }
+
+    .auth-links .link {
+        font-size: 0.86rem;
+        color: var(--circle-forest);
+        text-decoration: none;
+        position: relative;
+        transition: color 0.25s ease;
+    }
+
+    .auth-links .link::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -3px;
+        height: 1px;
+        background: var(--circle-wine);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.25s ease;
+    }
+
+    .auth-links .link:hover {
+        color: var(--circle-wine);
+    }
+
+    .auth-links .link:hover::after {
+        transform: scaleX(1);
+    }
+
+    @media (max-width: 480px) {
+        .auth-card {
+            padding: 36px 24px;
+        }
+
+        .auth-links {
+            flex-direction: column;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .auth-card {
+            animation: none;
+            opacity: 1;
+            transform: none;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <section class="auth-section">
     <div class="auth-container">
         <div class="auth-card">
             <h1>Admin Login</h1>
             <p class="auth-subtitle">Authorized personnel only</p>
-            
+
             <form method="post" class="auth-form" novalidate>
                 {% csrf_token %}
-                
+
                 {% if form.non_field_errors %}
                     <div class="alert alert-error">
                         {{ form.non_field_errors.0 }}
                     </div>
                 {% endif %}
-                
+
                 <div class="form-group">
                     <label for="{{ form.username.id_for_label }}">Admin Email</label>
                     {{ form.username }}
@@ -25,7 +304,7 @@
                         <span class="error-message">{{ form.username.errors.0 }}</span>
                     {% endif %}
                 </div>
-                
+
                 <div class="form-group">
                     <label for="{{ form.password.id_for_label }}">Password</label>
                     <div class="password-field">
@@ -39,11 +318,11 @@
                     {% endif %}
                     <small class="form-hint">Password cannot be pasted. Please type manually.</small>
                 </div>
-                
+
                 <div class="form-actions">
                     <button type="submit" class="btn btn-primary btn-block">Login</button>
                 </div>
-                
+
                 <div class="auth-links">
                     <a href="{% url 'forgot_password' %}" class="link">Forgot Password?</a>
                     <a href="{% url 'login' %}" class="link">Member Login</a>
@@ -59,7 +338,7 @@
 function togglePassword(fieldId) {
     const field = document.getElementById(fieldId);
     const button = field.nextElementSibling;
-    
+
     if (field.type === 'password') {
         field.type = 'text';
         button.textContent = 'Hide';

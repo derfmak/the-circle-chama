@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Application Details - Elites Pioneer Club{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --epc-cream: #f0eee6;
+        --epc-forest: #1a3c2a;
+        --epc-forest-deep: #0f281c;
+        --epc-gold: #f5b041;
+        --epc-gold-deep: #e07c1f;
+        --epc-ink: #1e2e2a;
+        --epc-mist: #ddd8c8;
+        --font-display: 'Space Grotesk', sans-serif;
+        --font-body: 'Inter', sans-serif;
+        --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    .detail-page {
+        padding: 20px 0;
+    }
+
+    .detail-page * {
+        font-family: var(--font-body);
+    }
+
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .page-header h1 {
+        font-family: var(--font-display);
+        font-size: 1.6rem;
+        color: var(--epc-forest);
+        letter-spacing: -0.01em;
+    }
+
+    .page-header .subtitle {
+        color: rgba(30, 46, 42, 0.6);
+        font-size: 0.92rem;
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--epc-forest);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color 0.3s ease;
+    }
+
+    .back-link:hover {
+        color: var(--epc-gold-deep);
+    }
+
+    .detail-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+    }
+
+    .detail-card {
+        background: #fdfbf5;
+        border: 1px solid var(--epc-mist);
+        border-radius: 16px;
+        padding: 24px;
+    }
+
+    .detail-card h2 {
+        font-family: var(--font-display);
+        font-size: 1.1rem;
+        color: var(--epc-forest);
+        margin-bottom: 16px;
+        letter-spacing: -0.01em;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--epc-mist);
+    }
+
+    .detail-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid rgba(221, 216, 200, 0.3);
+    }
+
+    .detail-item:last-child {
+        border-bottom: none;
+    }
+
+    .detail-item .label {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(30, 46, 42, 0.5);
+        font-weight: 500;
+    }
+
+    .detail-item .value {
+        font-size: 0.95rem;
+        color: var(--epc-ink);
+        text-align: right;
+        max-width: 60%;
+        word-break: break-word;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 2px 14px;
+        border-radius: 50px;
+        font-size: 0.72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-family: var(--font-mono);
+    }
+
+    .badge-pending {
+        background: #fbf0d9;
+        color: #7a5a10;
+    }
+
+    .badge-approved {
+        background: #e2f2e6;
+        color: #1e5c33;
+    }
+
+    .badge-rejected {
+        background: #fbe4e4;
+        color: #8a2c2c;
+    }
+
+    .badge-on-hold {
+        background: #d1ecf1;
+        color: #0c5460;
+    }
+
+    .action-section {
+        margin-top: 24px;
+        padding-top: 20px;
+        border-top: 1px solid var(--epc-mist);
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        padding: 10px 28px;
+        border-radius: 50px;
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 0.88rem;
+        border: none;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+    }
+
+    .btn-approve {
+        background: #2f9e50;
+        color: #fff;
+    }
+
+    .btn-approve:hover {
+        background: #1e7a3a;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(47, 158, 80, 0.3);
+    }
+
+    .btn-reject {
+        background: #b03a3a;
+        color: #fff;
+    }
+
+    .btn-reject:hover {
+        background: #8a2c2c;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(176, 58, 58, 0.3);
+    }
+
+    .btn-hold {
+        background: #b07a2a;
+        color: #fff;
+    }
+
+    .btn-hold:hover {
+        background: #8a5f20;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(176, 122, 42, 0.3);
+    }
+
+    .btn-outline {
+        background: transparent;
+        color: var(--epc-forest);
+        border: 1.5px solid var(--epc-mist);
+    }
+
+    .btn-outline:hover {
+        background: var(--epc-forest);
+        color: #fdfbf5;
+        border-color: var(--epc-forest);
+        transform: translateY(-2px);
+    }
+
+    .feedback-section {
+        margin-top: 16px;
+    }
+
+    .feedback-section textarea {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1.5px solid var(--epc-mist);
+        border-radius: 10px;
+        font-family: var(--font-body);
+        font-size: 0.92rem;
+        color: var(--epc-ink);
+        background: #fff;
+        resize: vertical;
+        min-height: 100px;
+        transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .feedback-section textarea:focus {
+        outline: none;
+        border-color: var(--epc-gold-deep);
+        box-shadow: 0 0 0 4px rgba(245, 176, 65, 0.16);
+    }
+
+    .feedback-section label {
+        display: block;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: rgba(30, 46, 42, 0.5);
+        margin-bottom: 6px;
+    }
+
+    .alert {
+        padding: 12px 16px;
+        border-radius: 10px;
+        font-size: 0.9rem;
+        margin-bottom: 16px;
+    }
+
+    .alert-info {
+        background: #e2eef4;
+        color: #1c5468;
+        border-left: 4px solid #2f8fae;
+    }
+
+    .alert-warning {
+        background: #fbf0d9;
+        color: #7a5a10;
+        border-left: 4px solid #b07a2a;
+    }
+
+    .alert-success {
+        background: #e2f2e6;
+        color: #1e5c33;
+        border-left: 4px solid #2f9e50;
+    }
+
+    .alert-error {
+        background: #fbe4e4;
+        color: #8a2c2c;
+        border-left: 4px solid #b03a3a;
+    }
+
+    @media (max-width: 768px) {
+        .detail-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .page-header {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .page-header h1 {
+            font-size: 1.3rem;
+        }
+
+        .action-buttons {
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .action-buttons .btn {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .detail-card {
+            padding: 18px;
+        }
+
+        .detail-item {
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-item .value {
+            text-align: left;
+            max-width: 100%;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .btn {
+            transition: none !important;
+        }
+
+        .btn:hover {
+            transform: none !important;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="detail-page">
+
+    <div class="page-header">
+        <div>
+            <h1>Application Details</h1>
+            <p class="subtitle">Review and manage membership application</p>
+        </div>
+        <a href="{% url 'admin_applications_list' %}" class="back-link">&#8592; Back to Applications</a>
+    </div>
+
+    <div class="detail-grid">
+
+        <div class="detail-card">
+            <h2>Applicant Information</h2>
+            <div class="detail-item">
+                <span class="label">Full Name</span>
+                <span class="value">{{ application.full_name }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Email Address</span>
+                <span class="value">{{ application.email }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Phone Number</span>
+                <span class="value">{{ application.phone_number }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">ID Number</span>
+                <span class="value">{{ application.id_number }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Application Date</span>
+                <span class="value">{{ application.created_at|date:"F j, Y, g:i A" }}</span>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <h2>Application Status</h2>
+            <div class="detail-item">
+                <span class="label">Status</span>
+                <span class="value">
+                    <span class="badge badge-{{ application.status }}">
+                        {{ application.get_status_display }}
+                    </span>
+                </span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Agreed to Terms</span>
+                <span class="value">{{ application.agreed_to_terms|yesno:"Yes,No" }}</span>
+            </div>
+            <div class="detail-item">
+                <span class="label">Agreed to Privacy</span>
+                <span class="value">{{ application.agreed_to_privacy|yesno:"Yes,No" }}</span>
+            </div>
+            {% if application.reviewed_at %}
+                <div class="detail-item">
+                    <span class="label">Reviewed Date</span>
+                    <span class="value">{{ application.reviewed_at|date:"F j, Y, g:i A" }}</span>
+                </div>
+            {% endif %}
+            {% if application.reviewed_by %}
+                <div class="detail-item">
+                    <span class="label">Reviewed By</span>
+                    <span class="value">{{ application.reviewed_by.get_full_name|default:application.reviewed_by.email }}</span>
+                </div>
+            {% endif %}
+            {% if application.review_notes %}
+                <div class="detail-item">
+                    <span class="label">Review Notes</span>
+                    <span class="value" style="text-align:left; max-width:70%;">{{ application.review_notes }}</span>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% if application.status == 'pending' %}
+        <div class="detail-card">
+            <h2>Take Action</h2>
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" action="{% url 'admin_application_detail' application.id %}">
+                {% csrf_token %}
+
+                <div class="feedback-section">
+                    <label for="feedback">Feedback / Notes (Optional)</label>
+                    <textarea id="feedback" name="feedback" placeholder="Add any notes or feedback for the applicant..."></textarea>
+                </div>
+
+                <div class="action-section">
+                    <div class="action-buttons">
+                        <button type="submit" name="action" value="approve" class="btn btn-approve">Approve Application</button>
+                        <button type="submit" name="action" value="hold" class="btn btn-hold">Place on Hold</button>
+                        <button type="submit" name="action" value="reject" class="btn btn-reject">Reject Application</button>
+                        <a href="{% url 'admin_applications_list' %}" class="btn btn-outline">Cancel</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    {% else %}
+        <div class="detail-card">
+            <h2>Application Already Processed</h2>
+            <div class="alert alert-info">
+                This application has already been <strong>{{ application.get_status_display }}</strong>.
+                {% if application.reviewed_at %}
+                    on {{ application.reviewed_at|date:"F j, Y, g:i A" }}
+                {% endif %}
+            </div>
+            <div class="action-buttons">
+                <a href="{% url 'admin_applications_list' %}" class="btn btn-outline">Back to Applications</a>
+            </div>
+        </div>
+    {% endif %}
+
+</div>
+{% endblock %}

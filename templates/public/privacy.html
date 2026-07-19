@@ -1,0 +1,313 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy - Elites Pioneer Club{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --epc-cream: #f0eee6;
+        --epc-forest: #1a3c2a;
+        --epc-forest-deep: #0f281c;
+        --epc-gold: #f5b041;
+        --epc-gold-deep: #e07c1f;
+        --epc-ink: #1e2e2a;
+        --epc-mist: #ddd8c8;
+        --font-display: 'Space Grotesk', sans-serif;
+        --font-body: 'Inter', sans-serif;
+        --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    .legal-page {
+        padding: 20px 0 60px;
+    }
+
+    .legal-page * {
+        font-family: var(--font-body);
+    }
+
+    .page-header {
+        background: var(--epc-forest);
+        border-radius: 28px;
+        padding: 56px 48px;
+        position: relative;
+        overflow: hidden;
+        text-align: center;
+        margin-bottom: 40px;
+    }
+
+    .page-header::before {
+        content: '';
+        position: absolute;
+        top: -30%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        border-radius: 50%;
+        background: rgba(245, 176, 65, 0.06);
+        pointer-events: none;
+    }
+
+    .page-header::after {
+        content: '';
+        position: absolute;
+        bottom: -30%;
+        left: -10%;
+        width: 250px;
+        height: 250px;
+        border-radius: 50%;
+        background: rgba(245, 176, 65, 0.04);
+        pointer-events: none;
+    }
+
+    .page-header .eyebrow {
+        font-family: var(--font-mono);
+        font-size: 0.7rem;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: var(--epc-gold);
+        position: relative;
+        z-index: 1;
+        display: inline-block;
+    }
+
+    .page-header h1 {
+        position: relative;
+        z-index: 1;
+        font-family: var(--font-display);
+        font-size: clamp(2rem, 4vw, 2.8rem);
+        color: #fdfbf5;
+        margin-top: 8px;
+        letter-spacing: -0.01em;
+    }
+
+    .page-header p {
+        position: relative;
+        z-index: 1;
+        color: rgba(245, 243, 234, 0.65);
+        font-size: 0.95rem;
+        margin-top: 10px;
+    }
+
+    .content-wrapper {
+        background: #fdfbf5;
+        border: 1px solid var(--epc-mist);
+        border-radius: 20px;
+        padding: 48px 52px;
+        box-shadow: 0 20px 44px rgba(15, 40, 28, 0.06);
+        transition: box-shadow 0.3s ease;
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .content-wrapper:hover {
+        box-shadow: 0 24px 52px rgba(15, 40, 28, 0.1);
+    }
+
+    .last-updated {
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        letter-spacing: 0.06em;
+        color: rgba(30, 46, 42, 0.4);
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--epc-mist);
+        margin-bottom: 28px;
+    }
+
+    .legal-content h2 {
+        font-family: var(--font-display);
+        font-size: 1.25rem;
+        color: var(--epc-forest);
+        margin-top: 32px;
+        margin-bottom: 10px;
+        letter-spacing: -0.01em;
+    }
+
+    .legal-content h2:first-of-type {
+        margin-top: 0;
+    }
+
+    .legal-content p {
+        font-size: 0.98rem;
+        line-height: 1.75;
+        color: rgba(30, 46, 42, 0.75);
+        margin-bottom: 12px;
+    }
+
+    .legal-content ul {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0 16px 0;
+    }
+
+    .legal-content ul li {
+        font-size: 0.96rem;
+        line-height: 1.7;
+        color: rgba(30, 46, 42, 0.72);
+        padding: 8px 0 8px 30px;
+        position: relative;
+        border-bottom: 1px solid rgba(221, 216, 200, 0.3);
+    }
+
+    .legal-content ul li:last-child {
+        border-bottom: none;
+    }
+
+    .legal-content ul li::before {
+        content: '';
+        position: absolute;
+        left: 6px;
+        top: 16px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--epc-gold);
+        opacity: 0.6;
+    }
+
+    .legal-content a {
+        color: var(--epc-gold-deep);
+        text-decoration: none;
+        font-weight: 500;
+        position: relative;
+        transition: color 0.25s ease;
+    }
+
+    .legal-content a::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: -2px;
+        height: 1.5px;
+        background: var(--epc-gold-deep);
+        transform: scaleX(0);
+        transform-origin: left;
+        transition: transform 0.25s ease;
+    }
+
+    .legal-content a:hover {
+        color: var(--epc-forest);
+    }
+
+    .legal-content a:hover::after {
+        transform: scaleX(1);
+    }
+
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 32px;
+        font-family: var(--font-body);
+        font-size: 0.92rem;
+        color: var(--epc-forest);
+        text-decoration: none;
+        transition: color 0.25s ease, transform 0.25s ease;
+        padding: 8px 0;
+    }
+
+    .back-link:hover {
+        color: var(--epc-gold-deep);
+        transform: translateX(-4px);
+    }
+
+    @media (max-width: 768px) {
+        .page-header {
+            padding: 44px 28px;
+            border-radius: 22px;
+        }
+
+        .content-wrapper {
+            padding: 32px 28px;
+            border-radius: 16px;
+        }
+
+        .legal-content h2 {
+            font-size: 1.1rem;
+        }
+
+        .legal-content p {
+            font-size: 0.92rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .page-header {
+            padding: 36px 20px;
+            border-radius: 18px;
+        }
+
+        .page-header h1 {
+            font-size: 1.6rem;
+        }
+
+        .content-wrapper {
+            padding: 24px 18px;
+        }
+
+        .legal-content h2 {
+            font-size: 1rem;
+        }
+
+        .legal-content p {
+            font-size: 0.88rem;
+        }
+
+        .legal-content ul li {
+            font-size: 0.88rem;
+            padding: 6px 0 6px 26px;
+        }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        .content-wrapper:hover {
+            box-shadow: 0 20px 44px rgba(15, 40, 28, 0.06);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="legal-page">
+    <div class="container">
+        <div class="page-header">
+            <span class="eyebrow">Your Privacy Matters</span>
+            <h1>Privacy Policy</h1>
+            <p>How we collect, use, and protect your personal information</p>
+        </div>
+
+        <div class="content-wrapper">
+            <div class="last-updated">
+                Last updated: {% now "F j, Y" %}
+            </div>
+
+            <div class="legal-content">
+                <h2>Information We Collect</h2>
+                <p>Elites Pioneer Club collects information to provide better services to our members. We collect information you provide directly, such as when you register, make contributions, or communicate with us.</p>
+
+                <h2>How We Use Information</h2>
+                <p>We use the information we collect to operate, maintain, and provide features of Elites Pioneer Club, to process transactions, and to communicate with you about your membership.</p>
+
+                <h2>Information Sharing</h2>
+                <p>We do not share personal information with companies, organizations, or individuals outside of Elites Pioneer Club except in the following cases:</p>
+                <ul>
+                    <li>With your explicit consent</li>
+                    <li>For legal reasons or regulatory requirements</li>
+                    <li>To process payments through our trusted payment partners</li>
+                </ul>
+
+                <h2>Data Security</h2>
+                <p>We work hard to protect Elites Pioneer Club and our members from unauthorized access, alteration, disclosure, or destruction of information we hold. We use industry-standard encryption and security practices.</p>
+
+                <h2>Your Rights</h2>
+                <p>You have the right to access, correct, or delete your personal information at any time. Please contact us if you wish to exercise these rights.</p>
+
+                <h2>Contact Us</h2>
+                <p>If you have questions about this Privacy Policy, please contact us at: <a href="mailto:{{ ADMIN_EMAIL }}">{{ ADMIN_EMAIL }}</a></p>
+
+                <a href="{% url 'home' %}" class="back-link">&#8592; Back to Home</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
